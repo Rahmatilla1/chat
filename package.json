@@ -1,11 +1,12 @@
 {
   "dependencies": {
+    "web-push": "^3.6.7",
     "ws": "^8.18.2"
   },
   "scripts": {
     "start": "node Index.js"
   },
   "engines": {
-  "node": ">=18"
-}
+    "node": ">=18"
+  }
 }
