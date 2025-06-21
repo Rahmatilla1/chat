@@ -29,8 +29,19 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-    }
+  navigator.serviceWorker.register('sw.js').then(function(reg) {
+    reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: 'YOUR_PUBLIC_VAPID_KEY'
+    }).then(function(subscription) {
+      fetch('/subscribe', {
+        method: 'POST',
+        body: JSON.stringify(subscription),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    });
+  });
+}
         if (window.Notification && Notification.permission !== "granted") {
         Notification.requestPermission();
     }
