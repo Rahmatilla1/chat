@@ -49,34 +49,31 @@ app.post('/login', (req, res) => {
   res.json({ token, username });
 });
 
-// Subscription qabul qilish endpointi
+// Push subscription qabul qilish
 app.post('/subscribe', (req, res) => {
   subscriptions.push(req.body);
   res.status(201).json({});
 });
 
-// HTTP server va WebSocket birga ishlashi uchun
+// HTTP va WebSocket server
 const server = http.createServer(app);
-
 const wss = new WebSocket.Server({ server });
 
-// ...existing code...
 wss.on('connection', function connection(ws) {
   ws.on('message', function incoming(message) {
-    // message: { text, id, name }
     let msgObj;
     try {
       msgObj = JSON.parse(message);
     } catch (e) {
       return;
     }
-    // Xabarni barcha clientlarga yuborish
+    // Barcha clientlarga chat xabarini yuborish
     wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify(msgObj));
       }
     });
-    // Push notification uchun ham msgObj.name va msgObj.text dan foydalaning
+    // Push notification yuborish
     subscriptions.forEach(sub => {
       webpush.sendNotification(sub, JSON.stringify({
         title: msgObj.name + " dan xabar",
