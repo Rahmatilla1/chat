@@ -116,16 +116,31 @@
         if (e.key === 'Enter') sendBtn.click();
     });
 
+        // ...existing code...
     registerBtn.onclick = function() {
         const name = usernameInput.value.trim();
         if (name) {
             myName = name;
+            // Ismni localStorage'ga saqlash (foydalanuvchi qayta kirganda eslab qolish uchun)
+            localStorage.setItem('chat_username', myName);
             registerDiv.style.display = 'none';
             messageInput.disabled = false;
             sendBtn.disabled = false;
             messageInput.focus();
         }
     };
+
+    // Sahifa yuklanganda ismni tekshirish
+    window.onload = function() {
+        const savedName = localStorage.getItem('chat_username');
+        if (savedName) {
+            myName = savedName;
+            registerDiv.style.display = 'none';
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+        }
+    };
+    // ...existing code...
     </script>
 </body>
 </html>

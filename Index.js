@@ -32,20 +32,27 @@ const server = http.createServer(app);
 
 const wss = new WebSocket.Server({ server });
 
+// ...existing code...
 wss.on('connection', function connection(ws) {
   ws.on('message', function incoming(message) {
-    console.log('Qabul qilindi:', message.toString());
-    // WebSocket orqali xabarlarni barcha clientlarga yuborish
+    // message: { text, id, name }
+    let msgObj;
+    try {
+      msgObj = JSON.parse(message);
+    } catch (e) {
+      return;
+    }
+    // Xabarni barcha clientlarga yuborish
     wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
+        client.send(JSON.stringify(msgObj));
       }
     });
-    // Push notification yuborish
+    // Push notification uchun ham msgObj.name va msgObj.text dan foydalaning
     subscriptions.forEach(sub => {
       webpush.sendNotification(sub, JSON.stringify({
-        title: 'Yangi xabar!',
-        body: message.toString()
+        title: msgObj.name + " dan xabar",
+        body: msgObj.text
       })).catch(err => console.error(err));
     });
   });
