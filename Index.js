@@ -1,12 +1,14 @@
+const express = require('express');
+const bodyParser = require('body-parser');
 const http = require('http');
 const WebSocket = require('ws');
-const express = require('express');
 const webpush = require('web-push');
-const bodyParser = require('body-parser');
+const cors = require('cors');
 const PORT = process.env.PORT || 4001;
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());
 
 const vapidKeys = {
   publicKey: 'BO9Yb27493XMq3AOqzZ67k81BELQxTjULRSoymwwi0W4ihVg4yFkcEgeoZTKXvfVdVM4_yhC_QVYQc54-THfkSY',
@@ -20,6 +22,32 @@ webpush.setVapidDetails(
 );
 
 let subscriptions = [];
+let users = []; // { username, password }
+let sessions = {}; // { token: username }
+
+function generateToken() {
+  return Math.random().toString(36).substr(2, 16);
+}
+
+// Ro'yxatdan o'tish
+app.post('/register', (req, res) => {
+  const { username, password } = req.body;
+  if (users.find(u => u.username === username)) {
+    return res.status(400).json({ error: 'Username already exists' });
+  }
+  users.push({ username, password });
+  res.json({ success: true });
+});
+
+// Login
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = users.find(u => u.username === username && u.password === password);
+  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+  const token = generateToken();
+  sessions[token] = username;
+  res.json({ token, username });
+});
 
 // Subscription qabul qilish endpointi
 app.post('/subscribe', (req, res) => {

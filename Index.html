@@ -23,6 +23,14 @@
         <button id="registerBtn">Kirish</button>
     </div>
     <h2>Odamlar Chat</h2>
+    <div id="auth">
+    <h3>Kirish yoki Ro'yxatdan o'tish</h3>
+    <input type="text" id="auth-username" placeholder="Username">
+    <input type="password" id="auth-password" placeholder="Parol">
+    <button id="loginBtn">Kirish</button>
+    <button id="registerBtn">Ro'yxatdan o'tish</button>
+    <div id="auth-error" style="color:red"></div>
+    </div>
     <div id="chat-box"></div>
     <input type="text" id="message" placeholder="Xabar yozing..." disabled>
     <button id="send" disabled>Yuborish</button>
@@ -53,8 +61,51 @@
     const registerDiv = document.getElementById('register');
     const usernameInput = document.getElementById('username');
     const registerBtn = document.getElementById('registerBtn');
+    const authDiv = document.getElementById('auth');
+    const loginBtn = document.getElementById('loginBtn');
+    const authError = document.getElementById('auth-error');
     let myId = Math.random().toString(36).substr(2, 9);
+    let token = null;
     let myName = "";
+
+    loginBtn.onclick = function() {
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value.trim();
+  fetch('https://YOUR_BACKEND_URL/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.token) {
+      token = data.token;
+      myName = data.username;
+      authDiv.style.display = 'none';
+      // Chat oynasini ko'rsatish va WebSocket ulash
+    } else {
+      authError.textContent = data.error || 'Xatolik';
+    }
+  });
+};
+
+registerBtn.onclick = function() {
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value.trim();
+  fetch('http://localhost:4001/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
+    } else {
+      authError.textContent = data.error || 'Xatolik';
+    }
+  });
+};
 
     function appendMessage(sender, name, text) {
         const msgDiv = document.createElement('div');
