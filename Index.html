@@ -29,23 +29,8 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(function(reg) {
-    // Push subscription
-    if ('PushManager' in window) {
-      reg.pushManager.getSubscription().then(function(sub) {
-        if (!sub) {
-          reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: 'BBO...YOUR_PUBLIC_VAPID_KEY...'
-          }).then(function(subscription) {
-            // Subscription obyektini serverga yuboring (fetch orqali)
-            // console.log(JSON.stringify(subscription));
-          });
-        }
-      });
+    navigator.serviceWorker.register('sw.js');
     }
-  });
-}
         if (window.Notification && Notification.permission !== "granted") {
         Notification.requestPermission();
     }
@@ -57,23 +42,8 @@
     const registerDiv = document.getElementById('register');
     const usernameInput = document.getElementById('username');
     const registerBtn = document.getElementById('registerBtn');
-    const webpush = require('web-push');
-    const vapidKeys = webpush.generateVAPIDKeys();
-    console.log(vapidKeys);
     let myId = Math.random().toString(36).substr(2, 9);
     let myName = "";
-
-    webpush.setVapidDetails(
-  'mailto:your@email.com',
-  'YOUR_PUBLIC_VAPID_KEY',
-  'YOUR_PRIVATE_VAPID_KEY'
-);
-
-// Foydalanuvchi subscription obyektini saqlab, push yuborish:
-webpush.sendNotification(subscription, JSON.stringify({
-  title: 'Yangi xabar!',
-  body: 'Sizga yangi chat xabari keldi!'
-}));
 
     function appendMessage(sender, name, text) {
         const msgDiv = document.createElement('div');
