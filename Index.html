@@ -26,30 +26,33 @@
     <button id="send" disabled>Yuborish</button>
 
     <script>
-        const ws = new WebSocket('wss://chat-i8ex.onrender.com');
-        const chatBox = document.getElementById('chat-box');    
-        const messageInput = document.getElementById('message');
-        const sendBtn = document.getElementById('send');
-        const registerDiv = document.getElementById('register');
-        const usernameInput = document.getElementById('username');
-        const registerBtn = document.getElementById('registerBtn');
-        let myId = Math.random().toString(36).substr(2, 9);
-        let myName = "";
+        if (window.Notification && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
 
-        
-        function appendMessage(sender, name, text) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'msg ' + sender;
-            msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ' + text;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-        
-        ws.onopen = function() {
-        // Faqat ulanish ochilganda ro'yxatdan o'tish oynasini ko'rsatamiz
+    const ws = new WebSocket('wss://chat-i8ex.onrender.com');
+    const chatBox = document.getElementById('chat-box');    
+    const messageInput = document.getElementById('message');
+    const sendBtn = document.getElementById('send');
+    const registerDiv = document.getElementById('register');
+    const usernameInput = document.getElementById('username');
+    const registerBtn = document.getElementById('registerBtn');
+    let myId = Math.random().toString(36).substr(2, 9);
+    let myName = "";
+
+    function appendMessage(sender, name, text) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'msg ' + sender;
+        msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ' + text;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    ws.onopen = function() {
         registerDiv.style.display = 'block';
     };
-        ws.onmessage = function(event) {
+
+    ws.onmessage = function(event) {
         let data;
         if (typeof event.data === "string") {
             data = JSON.parse(event.data);
@@ -61,6 +64,10 @@
                     appendMessage('me', data.name, data.text);
                 } else {
                     appendMessage('other', data.name, data.text);
+                    // 2. Notification chiqarish
+                    if (window.Notification && Notification.permission === "granted") {
+                        new Notification(data.name + " dan xabar", { body: data.text });
+                    }
                 }
             };
             reader.readAsText(event.data);
@@ -70,6 +77,10 @@
             appendMessage('me', data.name, data.text);
         } else {
             appendMessage('other', data.name, data.text);
+            // 2. Notification chiqarish
+            if (window.Notification && Notification.permission === "granted") {
+                new Notification(data.name + " dan xabar", { body: data.text });
+            }
         }
     };
 
@@ -77,7 +88,7 @@
         alert("WebSocket ulanishida xatolik: " + e.message);
     };
 
-        sendBtn.onclick = function() {
+    sendBtn.onclick = function() {
         const userText = messageInput.value.trim();
         if (userText && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ text: userText, id: myId, name: myName }));
@@ -85,20 +96,20 @@
         }
     };
 
-        messageInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') sendBtn.click();
-        });
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') sendBtn.click();
+    });
 
-        registerBtn.onclick = function() {
-            const name = usernameInput.value.trim();
-            if (name) {
-                myName = name;
-                registerDiv.style.display = 'none';
-                messageInput.disabled = false;
-                sendBtn.disabled = false;
-                messageInput.focus();
-            }
-        };
+    registerBtn.onclick = function() {
+        const name = usernameInput.value.trim();
+        if (name) {
+            myName = name;
+            registerDiv.style.display = 'none';
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            messageInput.focus();
+        }
+    };
     </script>
 </body>
 </html>
