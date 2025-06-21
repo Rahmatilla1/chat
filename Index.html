@@ -11,25 +11,19 @@
         .msg { margin: 5px 0; }
         .me { color: blue; }
         .other { color: green; }
-        #register { background: #fff; border: 1px solid #ccc; padding: 20px; position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
     </style>
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#f4f4f4">
+    <meta name="theme-color" content="#f4f4f4">
 </head>
 <body>
-    <div id="register">
-        <h3>Ismingizni kiriting</h3>
-        <input type="text" id="username" placeholder="Ism...">
-        <button id="registerBtn">Kirish</button>
-    </div>
     <h2>Odamlar Chat</h2>
     <div id="auth">
-    <h3>Kirish yoki Ro'yxatdan o'tish</h3>
-    <input type="text" id="auth-username" placeholder="Username">
-    <input type="password" id="auth-password" placeholder="Parol">
-    <button id="loginBtn">Kirish</button>
-    <button id="registerBtn">Ro'yxatdan o'tish</button>
-    <div id="auth-error" style="color:red"></div>
+        <h3>Kirish yoki Ro'yxatdan o'tish</h3>
+        <input type="text" id="auth-username" placeholder="Username">
+        <input type="password" id="auth-password" placeholder="Parol">
+        <button id="loginBtn">Kirish</button>
+        <button id="registerBtn">Ro'yxatdan o'tish</button>
+        <div id="auth-error" style="color:red"></div>
     </div>
     <div id="chat-box"></div>
     <input type="text" id="message" placeholder="Xabar yozing..." disabled>
@@ -37,161 +31,117 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(function(reg) {
-    reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: 'YOUR_PUBLIC_VAPID_KEY'
-    }).then(function(subscription) {
-      fetch('/subscribe', {
-        method: 'POST',
-        body: JSON.stringify(subscription),
-        headers: { 'Content-Type': 'application/json' }
-      });
-    });
-  });
-}
+            navigator.serviceWorker.register('sw.js');
+        }
         if (window.Notification && Notification.permission !== "granted") {
-        Notification.requestPermission();
-    }
+            Notification.requestPermission();
+        }
 
-    const ws = new WebSocket('wss://chat-i8ex.onrender.com');
-    const chatBox = document.getElementById('chat-box');    
-    const messageInput = document.getElementById('message');
-    const sendBtn = document.getElementById('send');
-    const registerDiv = document.getElementById('register');
-    const usernameInput = document.getElementById('username');
-    const registerBtn = document.getElementById('registerBtn');
-    const authDiv = document.getElementById('auth');
-    const loginBtn = document.getElementById('loginBtn');
-    const authError = document.getElementById('auth-error');
-    let myId = Math.random().toString(36).substr(2, 9);
-    let token = null;
-    let myName = "";
+        const ws = new WebSocket('wss://chat-i8ex.onrender.com');
+        const chatBox = document.getElementById('chat-box');    
+        const messageInput = document.getElementById('message');
+        const sendBtn = document.getElementById('send');
+        const authDiv = document.getElementById('auth');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const authError = document.getElementById('auth-error');
+        let myId = Math.random().toString(36).substr(2, 9);
+        let token = null;
+        let myName = "";
 
-    loginBtn.onclick = function() {
-  const username = document.getElementById('auth-username').value.trim();
-  const password = document.getElementById('auth-password').value.trim();
-  fetch('https://YOUR_BACKEND_URL/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.token) {
-      token = data.token;
-      myName = data.username;
-      authDiv.style.display = 'none';
-      // Chat oynasini ko'rsatish va WebSocket ulash
-    } else {
-      authError.textContent = data.error || 'Xatolik';
-    }
-  });
-};
-
-registerBtn.onclick = function() {
-  const username = document.getElementById('auth-username').value.trim();
-  const password = document.getElementById('auth-password').value.trim();
-  fetch('http://localhost:4001/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.success) {
-      authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
-    } else {
-      authError.textContent = data.error || 'Xatolik';
-    }
-  });
-};
-
-    function appendMessage(sender, name, text) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'msg ' + sender;
-        msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ' + text;
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    
-    ws.onopen = function() {
-        registerDiv.style.display = 'block';
-    };
-
-    ws.onmessage = function(event) {
-        let data;
-        if (typeof event.data === "string") {
-            data = JSON.parse(event.data);
-        } else {
-            const reader = new FileReader();
-            reader.onload = function() {
-                data = JSON.parse(reader.result);
-                if (data.id === myId) {
-                    appendMessage('me', data.name, data.text);
+        loginBtn.onclick = function() {
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            fetch('http://localhost:4001/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.token) {
+                    token = data.token;
+                    myName = data.username;
+                    authDiv.style.display = 'none';
+                    messageInput.disabled = false;
+                    sendBtn.disabled = false;
                 } else {
-                    appendMessage('other', data.name, data.text);
-                    // 2. Notification chiqarish
-                    if (window.Notification && Notification.permission === "granted") {
-                        new Notification(data.name + " dan xabar", { body: data.text });
-                    }
+                    authError.textContent = data.error || 'Xatolik';
                 }
-            };
-            reader.readAsText(event.data);
-            return;
+            });
+        };
+
+        registerBtn.onclick = function() {
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            fetch('http://localhost:4001/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
+                } else {
+                    authError.textContent = data.error || 'Xatolik';
+                }
+            });
+        };
+
+        function appendMessage(sender, name, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg ' + sender;
+            msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ' + text;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
-        if (data.id === myId) {
-            appendMessage('me', data.name, data.text);
-        } else {
-            appendMessage('other', data.name, data.text);
-            // 2. Notification chiqarish
-            if (window.Notification && Notification.permission === "granted") {
-                new Notification(data.name + " dan xabar", { body: data.text });
+        
+        ws.onmessage = function(event) {
+            let data;
+            if (typeof event.data === "string") {
+                data = JSON.parse(event.data);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    data = JSON.parse(reader.result);
+                    if (data.id === myId) {
+                        appendMessage('me', data.name, data.text);
+                    } else {
+                        appendMessage('other', data.name, data.text);
+                        if (window.Notification && Notification.permission === "granted") {
+                            new Notification(data.name + " dan xabar", { body: data.text });
+                        }
+                    }
+                };
+                reader.readAsText(event.data);
+                return;
             }
-        }
-    };
+            if (data.id === myId) {
+                appendMessage('me', data.name, data.text);
+            } else {
+                appendMessage('other', data.name, data.text);
+                if (window.Notification && Notification.permission === "granted") {
+                    new Notification(data.name + " dan xabar", { body: data.text });
+                }
+            }
+        };
 
-    ws.onerror = function(e) {
-        alert("WebSocket ulanishida xatolik: " + e.message);
-    };
+        ws.onerror = function(e) {
+            alert("WebSocket ulanishida xatolik: " + e.message);
+        };
 
-    sendBtn.onclick = function() {
-        const userText = messageInput.value.trim();
-        if (userText && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ text: userText, id: myId, name: myName }));
-            messageInput.value = '';
-        }
-    };
+        sendBtn.onclick = function() {
+            const userText = messageInput.value.trim();
+            if (userText && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ text: userText, id: myId, name: myName }));
+                messageInput.value = '';
+            }
+        };
 
-    messageInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') sendBtn.click();
-    });
-
-        // ...existing code...
-    registerBtn.onclick = function() {
-        const name = usernameInput.value.trim();
-        if (name) {
-            myName = name;
-            // Ismni localStorage'ga saqlash (foydalanuvchi qayta kirganda eslab qolish uchun)
-            localStorage.setItem('chat_username', myName);
-            registerDiv.style.display = 'none';
-            messageInput.disabled = false;
-            sendBtn.disabled = false;
-            messageInput.focus();
-        }
-    };
-
-    // Sahifa yuklanganda ismni tekshirish
-    window.onload = function() {
-        const savedName = localStorage.getItem('chat_username');
-        if (savedName) {
-            myName = savedName;
-            registerDiv.style.display = 'none';
-            messageInput.disabled = false;
-            sendBtn.disabled = false;
-        }
-    };
-    // ...existing code...
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') sendBtn.click();
+        });
     </script>
 </body>
 </html>
