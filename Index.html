@@ -13,6 +13,8 @@
         .other { color: green; }
         #register { background: #fff; border: 1px solid #ccc; padding: 20px; position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
     </style>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f4f4f4">
 </head>
 <body>
     <div id="register">
@@ -26,6 +28,9 @@
     <button id="send" disabled>Yuborish</button>
 
     <script>
+        if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+    }
         if (window.Notification && Notification.permission !== "granted") {
         Notification.requestPermission();
     }
