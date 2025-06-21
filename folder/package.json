@@ -4,5 +4,8 @@
   },
   "scripts": {
     "start": "node Index.js"
-  }
+  },
+  "engines": {
+  "node": ">=18"
+}
 }
