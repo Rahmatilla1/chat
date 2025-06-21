@@ -27,6 +27,38 @@
     </div>
     <div id="chat-box"></div>
     <input type="text" id="message" placeholder="Xabar yozing..." disabled>
+    <!-- Sticker paneli -->
+<div id="stickers">
+    <!-- Emoji stickerlar -->
+    <button onclick="sendSticker('😀')">😀</button>
+    <button onclick="sendSticker('😂')">😂</button>
+    <button onclick="sendSticker('😍')">😍</button>
+    <button onclick="sendSticker('😎')">😎</button>
+    <button onclick="sendSticker('😭')">😭</button>
+    <button onclick="sendSticker('👍')">👍</button>
+    <button onclick="sendSticker('🎉')">🎉</button>
+    <button onclick="sendSticker('🔥')">🔥</button>
+    <button onclick="sendSticker('🥳')">🥳</button>
+    <button onclick="sendSticker('🤩')">🤩</button>
+    <button onclick="sendSticker('😡')">😡</button>
+    <button onclick="sendSticker('😱')">😱</button>
+    <button onclick="sendSticker('🤔')">🤔</button>
+    <button onclick="sendSticker('😴')">😴</button>
+    <button onclick="sendSticker('🙌')">🙌</button>
+    <!-- Rasmli stickerlar -->
+    <button onclick="sendSticker('img:sticker1.png')">
+        <img src="sticker1.png" alt="sticker" style="width:24px;height:24px;">
+    </button>
+    <button onclick="sendSticker('img:sticker2.png')">
+        <img src="sticker2.png" alt="sticker" style="width:24px;height:24px;">
+    </button>
+    <button onclick="sendSticker('img:sticker3.png')">
+        <img src="sticker3.png" alt="sticker" style="width:24px;height:24px;">
+    </button>
+    <button onclick="sendSticker('img:sticker4.png')">
+        <img src="sticker4.png" alt="sticker" style="width:24px;height:24px;">
+    </button>
+</div>
     <button id="send" disabled>Yuborish</button>
 
     <script>
@@ -89,13 +121,28 @@
             });
         };
 
-        function appendMessage(sender, name, text) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'msg ' + sender;
-            msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ' + text;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        function sendSticker(sticker) {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ text: sticker, id: myId, name: myName }));
         }
+}
+
+        function appendMessage(sender, name, text) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg ' + sender;
+    if (text.startsWith('img:')) {
+        const img = document.createElement('img');
+        img.src = text.replace('img:', '');
+        img.alt = 'sticker';
+        img.style.width = '48px';
+        msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ';
+        msgDiv.appendChild(img);
+    } else {
+        msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ' + text;
+    }
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
         
         ws.onmessage = function(event) {
             let data;
