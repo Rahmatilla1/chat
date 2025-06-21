@@ -3,7 +3,8 @@
     "ws": "^8.18.2"
   },
   "scripts": {
-    "start": "node Index.js"
+    "start": "node Index.js",
+    "dev": "nodemon Index.js"
   },
   "engines": {
   "node": ">=18"
