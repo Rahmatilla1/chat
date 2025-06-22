@@ -223,8 +223,9 @@
 
         // Emoji picker orqali emoji yuborish
         document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
-            sendSticker(event.detail.unicode);
-        });
+        messageInput.value += event.detail.unicode;
+        messageInput.focus();
+    });
 
         function appendMessage(sender, name, text) {
             const msgDiv = document.createElement('div');
