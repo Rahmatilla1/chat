@@ -11,13 +11,14 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const USERS_FILE = 'users.json';
-let users = []; // { username, password, contacts: [] }
-let sessions = {}; // { token: username }
+const CHATS_FILE = 'chats.json';
+let users = [];
+let sessions = {};
+let chats = {}; // { "user1|user2": [ {from, to, text, time}, ... ] }
 
-// Foydalanuvchilarni fayldan yuklash
-if (fs.existsSync(USERS_FILE)) {
-    users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
-}
+// Foydalanuvchilarni va chatlarni yuklash
+if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
+if (fs.existsSync(CHATS_FILE)) chats = JSON.parse(fs.readFileSync(CHATS_FILE, 'utf-8'));
 
 // Ro'yxatdan o'tish
 app.post('/register', (req, res) => {
@@ -43,12 +44,7 @@ app.post('/login', (req, res) => {
     res.json({ token, username });
 });
 
-// Barcha foydalanuvchilar ro'yxati (parolsiz)
-app.get('/users', (req, res) => {
-    res.json(users.map(u => ({ username: u.username })));
-});
-
-// Foydalanuvchining kontaktlari
+// Kontaktlar
 app.get('/contacts', (req, res) => {
     const token = req.headers.authorization;
     const username = sessions[token];
@@ -56,8 +52,9 @@ app.get('/contacts', (req, res) => {
     const user = users.find(u => u.username === username);
     res.json(user.contacts || []);
 });
-
-// Kontaktga qo'shish
+app.get('/users', (req, res) => {
+    res.json(users.map(u => ({ username: u.username })));
+});
 app.post('/contacts/add', (req, res) => {
     const token = req.headers.authorization;
     const username = sessions[token];
@@ -71,20 +68,36 @@ app.post('/contacts/add', (req, res) => {
     res.json({ success: true });
 });
 
-// WebSocket va chat kodlari (o'zgarmaydi)
+// Chat tarixini olish (faqat ikki user o‘rtasida)
+app.get('/chat/:withUser', (req, res) => {
+    const token = req.headers.authorization;
+    const username = sessions[token];
+    if (!username) return res.status(401).json({ error: 'Unauthorized' });
+    const withUser = req.params.withUser;
+    const key = [username, withUser].sort().join('|');
+    res.json(chats[key] || []);
+});
+
+// Xabar yuborish (faqat ikki user o‘rtasida)
+app.post('/chat/send', (req, res) => {
+    const token = req.headers.authorization;
+    const username = sessions[token];
+    if (!username) return res.status(401).json({ error: 'Unauthorized' });
+    const { to, text } = req.body;
+    const key = [username, to].sort().join('|');
+    if (!chats[key]) chats[key] = [];
+    chats[key].push({ from: username, to, text, time: Date.now() });
+    fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2));
+    res.json({ success: true });
+});
+
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 wss.on('connection', function connection(ws) {
     ws.on('message', function incoming(message) {
-        let msgObj;
-        try { msgObj = JSON.parse(message); } catch (e) { return; }
-        wss.clients.forEach(function each(client) {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify(msgObj));
-            }
-        });
+        // Bu joyda umumiy chat uchun kod bo‘lsa, uni olib tashlang yoki faqat private chat uchun ishlating
     });
 });
 server.listen(PORT, () => {
-    console.log(`WebSocket server ${PORT}-portda ishlayapti`);
+    console.log(`Server ${PORT}-portda ishlayapti`);
 });

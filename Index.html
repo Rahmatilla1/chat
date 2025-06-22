@@ -61,6 +61,30 @@
         #auth-error {
             min-height: 18px;
         }
+        #contacts {
+            max-width: 420px;
+            margin-bottom: 12px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            display: none;
+        }
+        #contacts-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #contacts-list li {
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #contacts-list li:hover, #contacts-list li.active {
+            background: #e0f7fa;
+        }
         #chat-box {
             width: 100%;
             max-width: 420px;
@@ -150,7 +174,7 @@
         }
         @media (max-width: 600px) {
             h2 { font-size: 1.2em; }
-            #auth, #chat-box, #chat-controls, emoji-picker {
+            #auth, #chat-box, #chat-controls, emoji-picker, #contacts {
                 max-width: 100vw;
                 width: 98vw;
             }
@@ -188,41 +212,31 @@
         <button id="registerBtn">Ro'yxatdan o'tish</button>
         <div id="auth-error" style="color:red"></div>
     </div>
-    <div id="contacts" style="max-width:420px; margin-bottom:12px; background:#fff; border-radius:8px; border:1px solid #ccc; padding:10px; display:none;">
-    <b>Kontaktlaringiz:</b>
-    <ul id="contacts-list" style="list-style:none; padding:0; margin:0;"></ul>
-    <hr>
-    <b>Barcha foydalanuvchilar:</b>
-    <ul id="users-list" style="list-style:none; padding:0; margin:0;"></ul>
-</div>
+    <div id="contacts">
+        <b>Kontaktlaringiz:</b>
+        <ul id="contacts-list"></ul>
+    </div>
     <div id="chat-box"></div>
     <div id="chat-controls">
-    <input type="text" id="message" placeholder="Xabar yozing..." disabled>
-    <button id="send" disabled>Yuborish</button>
-</div>
-    <!-- Emoji picker paneli -->
+        <input type="text" id="message" placeholder="Xabar yozing..." disabled>
+        <button id="send" disabled>Yuborish</button>
+    </div>
     <emoji-picker id="emojiPicker"></emoji-picker>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-        if (window.Notification && Notification.permission !== "granted") {
-            Notification.requestPermission();
-        }
+        let token = null;
+        let myName = "";
+        let currentChat = null;
 
-        const ws = new WebSocket('wss://chat-i8ex.onrender.com');
-        const chatBox = document.getElementById('chat-box');    
+        const chatBox = document.getElementById('chat-box');
         const messageInput = document.getElementById('message');
         const sendBtn = document.getElementById('send');
         const authDiv = document.getElementById('auth');
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
         const authError = document.getElementById('auth-error');
-        let myId = Math.random().toString(36).substr(2, 9);
-        let token = null;
-        let myName = "";
 
+        // Kirish
         loginBtn.onclick = function() {
             const username = document.getElementById('auth-username').value.trim();
             const password = document.getElementById('auth-password').value.trim();
@@ -237,14 +251,15 @@
                     token = data.token;
                     myName = data.username;
                     authDiv.style.display = 'none';
-                    messageInput.disabled = false;
-                    sendBtn.disabled = false;
+                    document.getElementById('contacts').style.display = '';
+                    loadContacts();
                 } else {
                     authError.textContent = data.error || 'Xatolik';
                 }
             });
         };
 
+        // Ro'yxatdan o'tish
         registerBtn.onclick = function() {
             const username = document.getElementById('auth-username').value.trim();
             const password = document.getElementById('auth-password').value.trim();
@@ -257,113 +272,98 @@
             .then(data => {
                 if (data.success) {
                     authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
+                    loadContacts();
                 } else {
                     authError.textContent = data.error || 'Xatolik';
                 }
             });
         };
 
-        function sendSticker(sticker) {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ text: sticker, id: myId, name: myName }));
-            }
+        // Kontaktlarni yuklash va kontaktga bosilganda chat ochish
+        function loadContacts() {
+            if (!token) return;
+            fetch('http://localhost:4001/contacts', { headers: { Authorization: token } })
+                .then(r => r.json())
+                .then(contacts => {
+                    const ul = document.getElementById('contacts-list');
+                    ul.innerHTML = '';
+                    contacts.forEach(name => {
+                        const li = document.createElement('li');
+                        li.textContent = name;
+                        li.onclick = function() {
+                            currentChat = name;
+                            document.querySelectorAll('#contacts-list li').forEach(el => el.classList.remove('active'));
+                            li.classList.add('active');
+                            messageInput.disabled = false;
+                            sendBtn.disabled = false;
+                            loadChatHistory();
+                        };
+                        ul.appendChild(li);
+                    });
+                });
         }
 
-        // Emoji picker orqali emoji yuborish
+        // Chat tarixini yuklash
+        function loadChatHistory() {
+            if (!currentChat) return;
+            fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
+                .then(r => r.json())
+                .then(msgs => {
+                    chatBox.innerHTML = '';
+                    msgs.forEach(msg => {
+                        appendMessage(msg.from === myName ? 'me' : 'other', msg.from, msg.text);
+                    });
+                });
+        }
+
+        // Xabar yuborish
+        function sendPrivateMessage() {
+            const text = messageInput.value.trim();
+            if (!text || !currentChat) return;
+            fetch('http://localhost:4001/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: token },
+                body: JSON.stringify({ to: currentChat, text })
+            }).then(() => {
+                messageInput.value = '';
+                loadChatHistory();
+            });
+        }
+
+        sendBtn.onclick = sendPrivateMessage;
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') sendPrivateMessage();
+        });
+
+        // Emoji picker orqali emoji qo'shish
         document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
             messageInput.value += event.detail.unicode;
             messageInput.focus();
         });
 
+        // Xabarni chat oynasiga chiqarish
         function appendMessage(sender, name, text) {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'msg ' + sender;
             if (sender === 'other') {
-                // Faqat boshqalar uchun ism chiqsin
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'name';
                 nameSpan.textContent = name;
                 msgDiv.appendChild(nameSpan);
             }
-            if (text && text.startsWith && text.startsWith('img:')) {
-                const img = document.createElement('img');
-                img.src = text.replace('img:', '');
-                img.alt = 'sticker';
-                img.style.width = '48px';
-                msgDiv.appendChild(img);
-            } else {
-                msgDiv.appendChild(document.createTextNode(text));
-            }
+            msgDiv.appendChild(document.createTextNode(text));
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
-        
-        ws.onmessage = function(event) {
-            let data;
-            if (typeof event.data === "string") {
-                data = JSON.parse(event.data);
-            } else {
-                const reader = new FileReader();
-                reader.onload = function() {
-                    data = JSON.parse(reader.result);
-                    if (data.id === myId) {
-                        appendMessage('me', data.name, data.text);
-                    } else {
-                        appendMessage('other', data.name, data.text);
-                        if (window.Notification && Notification.permission === "granted") {
-                            new Notification(data.name + " dan xabar", { body: data.text });
-                        }
-                    }
-                };
-                reader.readAsText(event.data);
-                return;
-            }
-            if (data.id === myId) {
-                appendMessage('me', data.name, data.text);
-            } else {
-                appendMessage('other', data.name, data.text);
-                if (window.Notification && Notification.permission === "granted") {
-                    new Notification(data.name + " dan xabar", { body: data.text });
-                }
-            }
-        };
 
-        ws.onerror = function(e) {
-            alert("WebSocket ulanishida xatolik: " + e.message);
-        };
-
-        sendBtn.onclick = function() {
-            const userText = messageInput.value.trim();
-            if (userText && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ text: userText, id: myId, name: myName }));
-                messageInput.value = '';
-            }
-        };
-
-        messageInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') sendBtn.click();
-        });
-
-        function loadContacts() {
-            fetch('http://localhost:4001/users')
-                .then(r => r.json())
-                .then(users => {
-                    const ul = document.getElementById('contacts-list');
-                    ul.innerHTML = '';
-                    users.forEach(u => {
-                        const li = document.createElement('li');
-                        li.textContent = u.username;
-                        ul.appendChild(li);
-                    });
-                });
+        // Service Worker va Notification
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
         }
-        // Kirganda kontaktlarni yuklash
-        window.onload = function() {
-            loadContacts();
-            // ...bor kodlar...
-        };
+        if (window.Notification && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
     </script>
-    <!-- Emoji picker kutubxonasi -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 </body>
 </html>
