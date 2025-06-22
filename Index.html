@@ -39,6 +39,7 @@
             #send { width: 55px; font-size: 0.95em; }
         }
     </style>
+    </style>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#f4f4f4">
 </head>
@@ -52,12 +53,10 @@
         <button id="registerBtn">Ro'yxatdan o'tish</button>
         <div id="auth-error" style="color:red"></div>
     </div>
-    <div id="contacts">
-        <b>Kontaktlaringiz:</b>
-        <ul id="contacts-list"></ul>
-        <hr>
-        <b>Barcha foydalanuvchilar:</b>
-        <ul id="all-users-list"></ul>
+    <div id="user-select" style="display:none; margin-bottom:10px;">
+        <b>Kim bilan chatlashmoqchisiz?</b>
+        <select id="userList"></select>
+        <button id="startChat">Chatni boshlash</button>
     </div>
     <div id="chat-box"></div>
     <div id="chat-controls">
@@ -78,108 +77,85 @@
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
         const authError = document.getElementById('auth-error');
+        const userSelectDiv = document.getElementById('user-select');
+        const userList = document.getElementById('userList');
+        const startChatBtn = document.getElementById('startChat');
 
         // Kirish
-        // Kirish
-loginBtn.onclick = function() {
-    const username = document.getElementById('auth-username').value.trim();
-    const password = document.getElementById('auth-password').value.trim();
-    fetch('http://localhost:4001/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.token) {
-            token = data.token;
-            myName = data.username;
-            authDiv.style.display = 'none'; // <-- SHU YERGA
-            document.getElementById('contacts').style.display = ''; // <-- SHU YERGA
-            loadContacts();
-            loadAllUsers();
-        } else {
-            authError.textContent = data.error || 'Xatolik';
-        }
-    });
-};
+        loginBtn.onclick = function() {
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            fetch('http://localhost:4001/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.token) {
+                    token = data.token;
+                    myName = data.username;
+                    authDiv.style.display = 'none';
+                    loadAllUsers();
+                } else {
+                    authError.textContent = data.error || 'Xatolik';
+                }
+            });
+        };
 
-// Ro'yxatdan o'tish
-registerBtn.onclick = function() {
-    const username = document.getElementById('auth-username').value.trim();
-    const password = document.getElementById('auth-password').value.trim();
-    fetch('http://localhost:4001/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
-            authDiv.style.display = 'none'; // <-- SHU YERGA
-            document.getElementById('contacts').style.display = ''; // <-- SHU YERGA
-            loadContacts();
-            loadAllUsers();
-        } else {
-            authError.textContent = data.error || 'Xatolik';
-        }
-    });
-};
+        // Ro'yxatdan o'tish
+        registerBtn.onclick = function() {
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            fetch('http://localhost:4001/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
+                    authDiv.style.display = 'none';
+                    loadAllUsers();
+                } else {
+                    authError.textContent = data.error || 'Xatolik';
+                }
+            });
+        };
 
-        // Kontaktlarni yuklash va kontaktga bosilganda chat ochish
-        function loadContacts() {
-            if (!token) return;
-            fetch('http://localhost:4001/contacts', { headers: { Authorization: token } })
-                .then(r => r.json())
-                .then(contacts => {
-                    const ul = document.getElementById('contacts-list');
-                    ul.innerHTML = '';
-                    contacts.forEach(name => {
-                        const li = document.createElement('li');
-                        li.textContent = name;
-                        li.onclick = function() {
-                            currentChat = name;
-                            document.querySelectorAll('#contacts-list li').forEach(el => el.classList.remove('active'));
-                            li.classList.add('active');
-                            messageInput.disabled = false;
-                            sendBtn.disabled = false;
-                            loadChatHistory();
-                        };
-                        ul.appendChild(li);
-                    });
-                });
-        }
-
-        // Barcha foydalanuvchilar ro'yxati va kontaktga qo'shish
+        // Foydalanuvchilar ro'yxatini yuklash va selectga joylash
         function loadAllUsers() {
-            if (!token) return;
             fetch('http://localhost:4001/users')
                 .then(r => r.json())
                 .then(users => {
-                    const ul = document.getElementById('all-users-list');
-                    ul.innerHTML = '';
+                    userList.innerHTML = '';
                     users.forEach(u => {
                         if (u.username !== myName) {
-                            const li = document.createElement('li');
-                            li.textContent = u.username + ' ';
-                            const btn = document.createElement('button');
-                            btn.textContent = "Kontaktga qo'shish";
-                            btn.onclick = function() {
-                                fetch('http://localhost:4001/contacts/add', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json', Authorization: token },
-                                    body: JSON.stringify({ contact: u.username })
-                                }).then(() => {
-                                    loadContacts();
-                                });
-                            };
-                            li.appendChild(btn);
-                            ul.appendChild(li);
+                            const opt = document.createElement('option');
+                            opt.value = u.username;
+                            opt.textContent = u.username;
+                            userList.appendChild(opt);
                         }
                     });
+                    if (userList.children.length > 0) {
+                        userSelectDiv.style.display = '';
+                    } else {
+                        userSelectDiv.style.display = 'none';
+                        alert("Hozircha boshqa foydalanuvchi yo'q.");
+                    }
                 });
         }
+
+        // Chatni boshlash
+        startChatBtn.onclick = function() {
+            currentChat = userList.value;
+            if (currentChat) {
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                loadChatHistory();
+            }
+        };
 
         // Chat tarixini yuklash
         function loadChatHistory() {
