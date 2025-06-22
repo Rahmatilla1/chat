@@ -1,34 +1,26 @@
 [
   {
     "username": "Nig'matilla",
-    "password": "aloo",
-    "contacts": [
-      "Rahmatilla"
-    ]
+    "password": "aloo"
   },
   {
     "username": "Rahmatilla",
-    "password": "Rahmatilla2009",
-    "contacts": []
+    "password": "Rahmatilla2009"
   },
   {
     "username": "nig",
-    "password": "1234",
-    "contacts": []
+    "password": "1234"
   },
   {
     "username": "xk",
-    "password": "123",
-    "contacts": []
+    "password": "123"
   },
   {
     "username": "testuser",
-    "password": "testpass",
-    "contacts": []
+    "password": "testpass"
   },
   {
     "username": "testuser1",
-    "password": "testpass1",
-    "contacts": []
+    "password": "testpass1"
   }
 ]
