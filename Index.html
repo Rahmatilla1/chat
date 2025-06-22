@@ -13,6 +13,11 @@
         #auth button { width: 48%; margin-right: 2%; margin-bottom: 8px; padding: 8px 0; border-radius: 5px; border: 1px solid rgb(82, 255, 47); background: rgb(82, 255, 47); color: #222; font-weight: bold; cursor: pointer; }
         #auth button:last-child { margin-right: 0; }
         #auth-error { min-height: 18px; }
+        #contacts { max-width: 420px; margin-bottom: 12px; background: #fff; border-radius: 8px; border: 1px solid #ccc; padding: 10px; display: none; }
+        #contacts-list, #all-users-list { list-style: none; padding: 0; margin: 0; }
+        #contacts-list li, #all-users-list li { padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; cursor: pointer; transition: background 0.2s; }
+        #contacts-list li:hover, #contacts-list li.active { background: #e0f7fa; }
+        #all-users-list button { margin-left: 8px; }
         #chat-box { width: 100%; max-width: 420px; height: 340px; border: 1px solid #ccc; background: #fff; overflow-y: auto; margin-bottom: 10px; padding: 12px 6px 12px 6px; box-sizing: border-box; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
         .msg { max-width: 80%; padding: 8px 14px; border-radius: 18px; margin: 2px 0; font-size: 1em; word-break: break-word; display: inline-block; position: relative; clear: both; }
         .me { align-self: flex-end; background: #dcf8c6; color: #222; border-bottom-right-radius: 4px; border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-top-right-radius: 18px; text-align: right; box-shadow: 0 1px 2px #b2dfdb44; }
@@ -25,7 +30,7 @@
         emoji-picker { width: 100%; max-width: 420px; margin-bottom: 10px; }
         @media (max-width: 600px) {
             h2 { font-size: 1.2em; }
-            #auth, #chat-box, #chat-controls, emoji-picker { max-width: 100vw; width: 98vw; }
+            #auth, #chat-box, #chat-controls, emoji-picker, #contacts { max-width: 100vw; width: 98vw; }
             #chat-box { height: 45vw; min-height: 180px; font-size: 1em; }
             #send { width: 70px; font-size: 1em; }
         }
@@ -47,6 +52,13 @@
         <button id="registerBtn">Ro'yxatdan o'tish</button>
         <div id="auth-error" style="color:red"></div>
     </div>
+    <div id="contacts">
+        <b>Kontaktlaringiz:</b>
+        <ul id="contacts-list"></ul>
+        <hr>
+        <b>Barcha foydalanuvchilar:</b>
+        <ul id="all-users-list"></ul>
+    </div>
     <div id="chat-box"></div>
     <div id="chat-controls">
         <input type="text" id="message" placeholder="Xabar yozing..." disabled>
@@ -58,6 +70,7 @@
         let token = null;
         let myName = "";
         let currentChat = null;
+
         const chatBox = document.getElementById('chat-box');
         const messageInput = document.getElementById('message');
         const sendBtn = document.getElementById('send');
@@ -67,67 +80,104 @@
         const authError = document.getElementById('auth-error');
 
         // Kirish
-        loginBtn.onclick = function() {
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            fetch('http://localhost:4001/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.token) {
-                    token = data.token;
-                    myName = data.username;
-                    authDiv.style.display = 'none';
-                    loadAllUsers();
-                } else {
-                    authError.textContent = data.error || 'Xatolik';
-                }
-            });
-        };
+        // Kirish
+loginBtn.onclick = function() {
+    const username = document.getElementById('auth-username').value.trim();
+    const password = document.getElementById('auth-password').value.trim();
+    fetch('http://localhost:4001/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.token) {
+            token = data.token;
+            myName = data.username;
+            authDiv.style.display = 'none'; // <-- SHU YERGA
+            document.getElementById('contacts').style.display = ''; // <-- SHU YERGA
+            loadContacts();
+            loadAllUsers();
+        } else {
+            authError.textContent = data.error || 'Xatolik';
+        }
+    });
+};
 
-        // Ro'yxatdan o'tish
-        registerBtn.onclick = function() {
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            fetch('http://localhost:4001/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
-                    authDiv.style.display = 'none';
-                    loadAllUsers();
-                } else {
-                    authError.textContent = data.error || 'Xatolik';
-                }
-            });
-        };
+// Ro'yxatdan o'tish
+registerBtn.onclick = function() {
+    const username = document.getElementById('auth-username').value.trim();
+    const password = document.getElementById('auth-password').value.trim();
+    fetch('http://localhost:4001/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
+            authDiv.style.display = 'none'; // <-- SHU YERGA
+            document.getElementById('contacts').style.display = ''; // <-- SHU YERGA
+            loadContacts();
+            loadAllUsers();
+        } else {
+            authError.textContent = data.error || 'Xatolik';
+        }
+    });
+};
 
-        // Barcha foydalanuvchilar ro'yxati va chat ochish
+        // Kontaktlarni yuklash va kontaktga bosilganda chat ochish
+        function loadContacts() {
+            if (!token) return;
+            fetch('http://localhost:4001/contacts', { headers: { Authorization: token } })
+                .then(r => r.json())
+                .then(contacts => {
+                    const ul = document.getElementById('contacts-list');
+                    ul.innerHTML = '';
+                    contacts.forEach(name => {
+                        const li = document.createElement('li');
+                        li.textContent = name;
+                        li.onclick = function() {
+                            currentChat = name;
+                            document.querySelectorAll('#contacts-list li').forEach(el => el.classList.remove('active'));
+                            li.classList.add('active');
+                            messageInput.disabled = false;
+                            sendBtn.disabled = false;
+                            loadChatHistory();
+                        };
+                        ul.appendChild(li);
+                    });
+                });
+        }
+
+        // Barcha foydalanuvchilar ro'yxati va kontaktga qo'shish
         function loadAllUsers() {
             if (!token) return;
             fetch('http://localhost:4001/users')
                 .then(r => r.json())
                 .then(users => {
-                    // Foydalanuvchilar ro'yxatini oddiy prompt orqali tanlash
-                    const usernames = users.filter(u => u.username !== myName).map(u => u.username);
-                    if (usernames.length === 0) {
-                        alert("Hozircha boshqa foydalanuvchi yo'q.");
-                        return;
-                    }
-                    const tanlangan = prompt("Kim bilan chatlashmoqchisiz? Foydalanuvchi: \n" + usernames.join('\n'));
-                    if (tanlangan && usernames.includes(tanlangan)) {
-                        currentChat = tanlangan;
-                        messageInput.disabled = false;
-                        sendBtn.disabled = false;
-                        loadChatHistory();
-                    }
+                    const ul = document.getElementById('all-users-list');
+                    ul.innerHTML = '';
+                    users.forEach(u => {
+                        if (u.username !== myName) {
+                            const li = document.createElement('li');
+                            li.textContent = u.username + ' ';
+                            const btn = document.createElement('button');
+                            btn.textContent = "Kontaktga qo'shish";
+                            btn.onclick = function() {
+                                fetch('http://localhost:4001/contacts/add', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', Authorization: token },
+                                    body: JSON.stringify({ contact: u.username })
+                                }).then(() => {
+                                    loadContacts();
+                                });
+                            };
+                            li.appendChild(btn);
+                            ul.appendChild(li);
+                        }
+                    });
                 });
         }
 

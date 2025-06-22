@@ -26,7 +26,7 @@ app.post('/register', (req, res) => {
     if (users.find(u => u.username === username)) {
         return res.status(400).json({ error: 'Username already exists' });
     }
-    users.push({ username, password }); // contacts: [] olib tashlandi
+    users.push({ username, password, contacts: [] });
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
     res.json({ success: true });
 });
@@ -44,9 +44,28 @@ app.post('/login', (req, res) => {
     res.json({ token, username });
 });
 
-// Faqat barcha foydalanuvchilar ro'yxati
+// Kontaktlar
+app.get('/contacts', (req, res) => {
+    const token = req.headers.authorization;
+    const username = sessions[token];
+    if (!username) return res.status(401).json({ error: 'Unauthorized' });
+    const user = users.find(u => u.username === username);
+    res.json(user.contacts || []);
+});
 app.get('/users', (req, res) => {
     res.json(users.map(u => ({ username: u.username })));
+});
+app.post('/contacts/add', (req, res) => {
+    const token = req.headers.authorization;
+    const username = sessions[token];
+    if (!username) return res.status(401).json({ error: 'Unauthorized' });
+    const { contact } = req.body;
+    const user = users.find(u => u.username === username);
+    if (!user.contacts.includes(contact) && contact !== username) {
+        user.contacts.push(contact);
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    }
+    res.json({ success: true });
 });
 
 // Chat tarixini olish (faqat ikki user o‘rtasida)
