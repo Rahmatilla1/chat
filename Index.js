@@ -26,7 +26,7 @@ app.post('/register', (req, res) => {
     if (users.find(u => u.username === username)) {
         return res.status(400).json({ error: 'Username already exists' });
     }
-    users.push({ username, password }); // contacts olib tashlandi
+    users.push({ username, password }); // contacts: [] olib tashlandi
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
     res.json({ success: true });
 });

@@ -70,7 +70,7 @@
         loginBtn.onclick = function() {
             const username = document.getElementById('auth-username').value.trim();
             const password = document.getElementById('auth-password').value.trim();
-            fetch(`http://localhost:4001/login`, {
+            fetch('http://localhost:4001/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -92,7 +92,7 @@
         registerBtn.onclick = function() {
             const username = document.getElementById('auth-username').value.trim();
             const password = document.getElementById('auth-password').value.trim();
-            fetch(`http://localhost:4001/register`, {
+            fetch('http://localhost:4001/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -112,7 +112,7 @@
         // Barcha foydalanuvchilar ro'yxati va chat ochish
         function loadAllUsers() {
             if (!token) return;
-            fetch(`http://localhost:4001/users`)
+            fetch('http://localhost:4001/users')
                 .then(r => r.json())
                 .then(users => {
                     // Foydalanuvchilar ro'yxatini oddiy prompt orqali tanlash
@@ -148,7 +148,7 @@
         function sendPrivateMessage() {
             const text = messageInput.value.trim();
             if (!text || !currentChat) return;
-            fetch(`http://localhost:4001/chat/send`, {
+            fetch('http://localhost:4001/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: token },
                 body: JSON.stringify({ to: currentChat, text })
