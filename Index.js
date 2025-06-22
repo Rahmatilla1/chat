@@ -83,6 +83,10 @@ wss.on('connection', function connection(ws) {
   });
 });
 
+document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
+    sendSticker(event.detail.unicode);
+});
+
 server.listen(PORT, () => {
   console.log(`WebSocket server ${PORT}-portda ishlayapti`);
 });
