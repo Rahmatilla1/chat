@@ -155,7 +155,7 @@
     loginBtn.onclick = function() {
         const username = document.getElementById('auth-username').value.trim();
         const password = document.getElementById('auth-password').value.trim();
-        fetch('http://localhost:4001/login', {
+        fetch('https://chat-x1i3.onrender.com/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -179,7 +179,7 @@
     registerBtn.onclick = function() {
         const username = document.getElementById('auth-username').value.trim();
         const password = document.getElementById('auth-password').value.trim();
-        fetch('http://localhost:4001/register', {
+        fetch('https://chat-x1i3.onrender.com/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -198,7 +198,7 @@
 
     // Foydalanuvchilar ro'yxatini yuklash va selectga joylash
     function loadAllUsers(cb) {
-        fetch('http://localhost:4001/users')
+        fetch('https://chat-x1i3.onrender.com/users')
             .then(r => r.json())
             .then(users => {
                 userList.innerHTML = '';
@@ -234,7 +234,7 @@
     // Chat tarixini yuklash
     function loadChatHistory() {
     if (!token || !currentChat) return;
-    fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
+    fetch(`https://chat-x1i3.onrender.com/chat/${currentChat}`, { headers: { Authorization: token } })
         .then(r => {
             if (r.status === 401) {
                 logout();
@@ -258,7 +258,7 @@
     function sendPrivateMessage() {
         const text = messageInput.value.trim();
         if (!text || !currentChat || !token) return;
-        fetch('http://localhost:4001/chat/send', {
+        fetch('https://chat-x1i3.onrender.com/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: token },
             body: JSON.stringify({ to: currentChat, text })
@@ -307,7 +307,7 @@
             const reader = new FileReader();
             reader.onloadend = function() {
                 const base64audio = reader.result;
-                fetch('http://localhost:4001/chat/send', {
+                fetch('https://chat-x1i3.onrender.com/chat/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: token },
                     body: JSON.stringify({ to: currentChat, text: base64audio, type: 'audio' })
