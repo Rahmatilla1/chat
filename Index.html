@@ -27,8 +27,9 @@
     </div>
     <div id="chat-box"></div>
     <input type="text" id="message" placeholder="Xabar yozing..." disabled>
-    <emoji-picker id="emojiPicker"></emoji-picker>
     <button id="send" disabled>Yuborish</button>
+    <!-- Emoji picker paneli -->
+    <emoji-picker id="emojiPicker"></emoji-picker>
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -91,27 +92,32 @@
         };
 
         function sendSticker(sticker) {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ text: sticker, id: myId, name: myName }));
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ text: sticker, id: myId, name: myName }));
+            }
         }
-}
+
+        // Emoji picker orqali emoji yuborish
+        document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
+            sendSticker(event.detail.unicode);
+        });
 
         function appendMessage(sender, name, text) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'msg ' + sender;
-    if (text.startsWith('img:')) {
-        const img = document.createElement('img');
-        img.src = text.replace('img:', '');
-        img.alt = 'sticker';
-        img.style.width = '48px';
-        msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ';
-        msgDiv.appendChild(img);
-    } else {
-        msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ' + text;
-    }
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg ' + sender;
+            if (text.startsWith('img:')) {
+                const img = document.createElement('img');
+                img.src = text.replace('img:', '');
+                img.alt = 'sticker';
+                img.style.width = '48px';
+                msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ';
+                msgDiv.appendChild(img);
+            } else {
+                msgDiv.textContent = (sender === 'me' ? 'Siz' : name) + ': ' + text;
+            }
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
         
         ws.onmessage = function(event) {
             let data;
@@ -160,6 +166,6 @@
         });
     </script>
     <!-- Emoji picker kutubxonasi -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/Index.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 </body>
 </html>
