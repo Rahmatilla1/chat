@@ -61,184 +61,166 @@
     </div>
     <emoji-picker id="emojiPicker"></emoji-picker>
 
-    <script>
-        let token = localStorage.getItem('token') || null;
-        let myName = localStorage.getItem('myName') || "";
-        let currentChat = localStorage.getItem('currentChat') || null;
-        const recordBtn = document.getElementById('recordBtn');
-        const chatBox = document.getElementById('chat-box');
-        const messageInput = document.getElementById('message');
-        const sendBtn = document.getElementById('send');
-        const authDiv = document.getElementById('auth');
-        const loginBtn = document.getElementById('loginBtn');
-        const registerBtn = document.getElementById('registerBtn');
-        const authError = document.getElementById('auth-error');
-        const userSelectDiv = document.getElementById('user-select');
-        const userList = document.getElementById('userList');
-        const startChatBtn = document.getElementById('startChat');
+    <!-- ...existing code... -->
+<script>
+    let token = localStorage.getItem('token') || null;
+    let myName = localStorage.getItem('myName') || "";
+    let currentChat = localStorage.getItem('currentChat') || null;
+    const recordBtn = document.getElementById('recordBtn');
+    const chatBox = document.getElementById('chat-box');
+    const messageInput = document.getElementById('message');
+    const sendBtn = document.getElementById('send');
+    const authDiv = document.getElementById('auth');
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const authError = document.getElementById('auth-error');
+    const userSelectDiv = document.getElementById('user-select');
+    const userList = document.getElementById('userList');
+    const startChatBtn = document.getElementById('startChat');
 
-        let mediaRecorder;
-        let audioChunks = [];
+    let mediaRecorder;
+    let audioChunks = [];
 
-        recordBtn.onclick = async function() {
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        mediaRecorder.stop();
-        recordBtn.textContent = "🎤 Ovoz yozish";
-        return;
+    // Xabarni chat oynasiga chiqarishda audio uchun:
+    function appendMessage(sender, name, text) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'msg ' + sender;
+        if (sender === 'other') {
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'name';
+            nameSpan.textContent = name;
+            msgDiv.appendChild(nameSpan);
+        }
+        // Agar audio bo‘lsa, player chiqarish
+        if (typeof text === 'string' && text.startsWith('data:audio')) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.src = text;
+            msgDiv.appendChild(audio);
+        } else {
+            msgDiv.appendChild(document.createTextNode(text));
+        }
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
-    if (!navigator.mediaDevices) {
-        alert("Brauzeringizda mikrofon yo‘q yoki ruxsat berilmagan!");
-        return;
-    }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-    mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.onloadend = function() {
-            const base64audio = reader.result;
-            // Ovozli xabarni yuborish
-            fetch('http://localhost:4001/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify({ to: currentChat, text: base64audio, type: 'audio' })
-            }).then(() => {
-                loadChatHistory();
+
+    // Avtomatik login holatini tiklash va chatni tiklash
+    window.addEventListener('DOMContentLoaded', function() {
+        token = localStorage.getItem('token');
+        myName = localStorage.getItem('myName');
+        currentChat = localStorage.getItem('currentChat');
+        if (token && myName) {
+            authDiv.style.display = 'none';
+            loadAllUsers(() => {
+                if (currentChat) {
+                    userList.value = currentChat;
+                    messageInput.disabled = false;
+                    sendBtn.disabled = false;
+                    loadChatHistory();
+                }
             });
-        };
-        reader.readAsDataURL(audioBlob);
-    };
-    mediaRecorder.start();
-    recordBtn.textContent = "⏹ To‘xtatish";
-};
+        } else {
+            // Token yoki ism yo‘q bo‘lsa, login oynasini ko‘rsatish
+            authDiv.style.display = '';
+            userSelectDiv.style.display = 'none';
+            chatBox.innerHTML = '';
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+        }
+    });
 
-// Xabarni chat oynasiga chiqarishda audio uchun:
-function appendMessage(sender, name, text) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'msg ' + sender;
-    if (sender === 'other') {
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'name';
-        nameSpan.textContent = name;
-        msgDiv.appendChild(nameSpan);
-    }
-    // Agar audio bo‘lsa, player chiqarish
-    if (typeof text === 'string' && text.startsWith('data:audio')) {
-        const audio = document.createElement('audio');
-        audio.controls = true;
-        audio.src = text;
-        msgDiv.appendChild(audio);
-    } else {
-        msgDiv.appendChild(document.createTextNode(text));
-    }
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-        // Avtomatik login holatini tiklash va chatni tiklash
-        window.addEventListener('DOMContentLoaded', function() {
-            if (token && myName) {
+    // Kirish
+    loginBtn.onclick = function() {
+        const username = document.getElementById('auth-username').value.trim();
+        const password = document.getElementById('auth-password').value.trim();
+        fetch('http://localhost:4001/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.token) {
+                token = data.token;
+                myName = data.username;
+                localStorage.setItem('token', token);
+                localStorage.setItem('myName', myName);
                 authDiv.style.display = 'none';
-                loadAllUsers(() => {
-                    if (currentChat) {
-                        userList.value = currentChat;
-                        messageInput.disabled = false;
-                        sendBtn.disabled = false;
-                        loadChatHistory();
-                    }
-                });
+                loadAllUsers();
+            } else {
+                authError.textContent = data.error || 'Xatolik';
             }
         });
+    };
 
-        // Kirish
-        loginBtn.onclick = function() {
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            fetch('http://localhost:4001/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.token) {
-                    token = data.token;
-                    myName = data.username;
-                    localStorage.setItem('token', token);
-                    localStorage.setItem('myName', myName);
-                    authDiv.style.display = 'none';
-                    loadAllUsers();
-                } else {
-                    authError.textContent = data.error || 'Xatolik';
-                }
-            });
-        };
-
-        // Ro'yxatdan o'tish
-        registerBtn.onclick = function() {
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            fetch('http://localhost:4001/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
-                    authDiv.style.display = 'none';
-                    loginBtn.onclick();
-                } else {
-                    authError.textContent = data.error || 'Xatolik';
-                }
-            });
-        };
-
-        // Foydalanuvchilar ro'yxatini yuklash va selectga joylash
-        function loadAllUsers(cb) {
-            fetch('http://localhost:4001/users')
-                .then(r => r.json())
-                .then(users => {
-                    userList.innerHTML = '';
-                    users.forEach(u => {
-                        if (u.username !== myName) {
-                            const opt = document.createElement('option');
-                            opt.value = u.username;
-                            opt.textContent = u.username;
-                            userList.appendChild(opt);
-                        }
-                    });
-                    if (userList.children.length > 0) {
-                        userSelectDiv.style.display = '';
-                    } else {
-                        userSelectDiv.style.display = 'none';
-                        alert("Hozircha boshqa foydalanuvchi yo'q.");
-                    }
-                    if (cb) cb();
-                });
-        }
-
-        // Chatni boshlash
-        startChatBtn.onclick = function() {
-            currentChat = userList.value;
-            if (currentChat) {
-                localStorage.setItem('currentChat', currentChat);
-                messageInput.disabled = false;
-                sendBtn.disabled = false;
-                loadChatHistory();
-            }
-        };
-
-        // Chat tarixini yuklash
-        function loadChatHistory() {
-    if (!currentChat) return;
-    fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
+    // Ro'yxatdan o'tish
+    registerBtn.onclick = function() {
+        const username = document.getElementById('auth-username').value.trim();
+        const password = document.getElementById('auth-password').value.trim();
+        fetch('http://localhost:4001/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        })
         .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
+                authDiv.style.display = 'none';
+                loginBtn.onclick();
+            } else {
+                authError.textContent = data.error || 'Xatolik';
+            }
+        });
+    };
+
+    // Foydalanuvchilar ro'yxatini yuklash va selectga joylash
+    function loadAllUsers(cb) {
+        fetch('http://localhost:4001/users')
+            .then(r => r.json())
+            .then(users => {
+                userList.innerHTML = '';
+                users.forEach(u => {
+                    if (u.username !== myName) {
+                        const opt = document.createElement('option');
+                        opt.value = u.username;
+                        opt.textContent = u.username;
+                        userList.appendChild(opt);
+                    }
+                });
+                if (userList.children.length > 0) {
+                    userSelectDiv.style.display = '';
+                } else {
+                    userSelectDiv.style.display = 'none';
+                    alert("Hozircha boshqa foydalanuvchi yo'q.");
+                }
+                if (cb) cb();
+            });
+    }
+
+    // Chatni boshlash
+    startChatBtn.onclick = function() {
+        currentChat = userList.value;
+        if (currentChat) {
+            localStorage.setItem('currentChat', currentChat);
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            loadChatHistory();
+        }
+    };
+
+    // Chat tarixini yuklash
+    function loadChatHistory() {
+    if (!token || !currentChat) return;
+    fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
+        .then(r => {
+            if (r.status === 401) {
+                logout();
+                return [];
+            }
+            return r.json();
+        })
         .then(msgs => {
-            console.log('msgs:', msgs); // <-- Qo‘shing
             chatBox.innerHTML = '';
             if (Array.isArray(msgs)) {
                 msgs.forEach(msg => {
@@ -250,64 +232,50 @@ function appendMessage(sender, name, text) {
         });
 }
 
-        // Xabar yuborish
-        function sendPrivateMessage() {
-            const text = messageInput.value.trim();
-            if (!text || !currentChat) return;
-            fetch('http://localhost:4001/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: token },
-                body: JSON.stringify({ to: currentChat, text })
-            }).then(() => {
-                messageInput.value = '';
-                loadChatHistory();
-            });
-        }
-
-        sendBtn.onclick = sendPrivateMessage;
-        messageInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') sendPrivateMessage();
+    // Xabar yuborish
+    function sendPrivateMessage() {
+        const text = messageInput.value.trim();
+        if (!text || !currentChat || !token) return;
+        fetch('http://localhost:4001/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: token },
+            body: JSON.stringify({ to: currentChat, text })
+        }).then(() => {
+            messageInput.value = '';
+            loadChatHistory();
         });
+    }
 
-        // Emoji picker orqali emoji qo'shish
-        document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
-            messageInput.value += event.detail.unicode;
-            messageInput.focus();
-        });
+    sendBtn.onclick = sendPrivateMessage;
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') sendPrivateMessage();
+    });
 
-        // Xabarni chat oynasiga chiqarish
-        function appendMessage(sender, name, text) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'msg ' + sender;
-            if (sender === 'other') {
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'name';
-                nameSpan.textContent = name;
-                msgDiv.appendChild(nameSpan);
-            }
-            msgDiv.appendChild(document.createTextNode(text));
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+    // Emoji picker orqali emoji qo'shish
+    document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
+        messageInput.value += event.detail.unicode;
+        messageInput.focus();
+    });
 
-        // Service Worker va Notification
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-        if (window.Notification && Notification.permission !== "granted") {
-            Notification.requestPermission();
-        }
+    // Service Worker va Notification
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+    if (window.Notification && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
 
-        // Logout funksiyasi (ixtiyoriy)
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('myName');
-            localStorage.removeItem('currentChat');
-            location.reload();
-        }
-        // Logout tugmasi qo'shish uchun:
-        // <button onclick="logout()">Chiqish</button>
-    </script>
+    // Logout funksiyasi
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('myName');
+        localStorage.removeItem('currentChat');
+        location.reload();
+    }
+    // Logout tugmasi qo'shish uchun:
+    // <button onclick="logout()">Chiqish</button>
+</script>
+<!-- ...existing code... -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 </body>
 </html>
