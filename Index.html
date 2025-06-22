@@ -234,16 +234,21 @@ function appendMessage(sender, name, text) {
 
         // Chat tarixini yuklash
         function loadChatHistory() {
-            if (!currentChat) return;
-            fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
-                .then(r => r.json())
-                .then(msgs => {
-                    chatBox.innerHTML = '';
-                    msgs.forEach(msg => {
-                        appendMessage(msg.from === myName ? 'me' : 'other', msg.from, msg.text);
-                    });
+    if (!currentChat) return;
+    fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
+        .then(r => r.json())
+        .then(msgs => {
+            console.log('msgs:', msgs); // <-- Qo‘shing
+            chatBox.innerHTML = '';
+            if (Array.isArray(msgs)) {
+                msgs.forEach(msg => {
+                    appendMessage(msg.from === myName ? 'me' : 'other', msg.from, msg.text);
                 });
-        }
+            } else {
+                chatBox.innerHTML = '<i>Xabarlar yo‘q</i>';
+            }
+        });
+}
 
         // Xabar yuborish
         function sendPrivateMessage() {
