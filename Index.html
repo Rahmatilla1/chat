@@ -265,6 +265,43 @@
         Notification.requestPermission();
     }
 
+    recordBtn.onclick = async function() {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        recordBtn.textContent = "🎤 Ovoz yozish";
+        return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Brauzeringizda mikrofon yo‘q yoki ruxsat berilmagan!");
+        return;
+    }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const base64audio = reader.result;
+                fetch('http://localhost:4001/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: token },
+                    body: JSON.stringify({ to: currentChat, text: base64audio, type: 'audio' })
+                }).then(() => {
+                    loadChatHistory();
+                });
+            };
+            reader.readAsDataURL(audioBlob);
+        };
+        mediaRecorder.start();
+        recordBtn.textContent = "⏹ To‘xtatish";
+    } catch (err) {
+        alert("Mikrofonga ruxsat bermadingiz yoki xatolik: " + err.message);
+    }
+};
+
     // Logout funksiyasi
     function logout() {
         localStorage.removeItem('token');
