@@ -2,12 +2,12 @@
   {
     "username": "Nig'matilla",
     "password": "aloo",
-    "contacts": ["Rahmatilla"]
+    "contacts": []
   },
   {
     "username": "Rahmatilla",
     "password": "Rahmatilla2009",
-    "contacts": ["Nig'matilla"]
+    "contacts": []
   },
   {
     "username": "nig",
