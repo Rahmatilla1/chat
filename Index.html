@@ -188,9 +188,12 @@
         <button id="registerBtn">Ro'yxatdan o'tish</button>
         <div id="auth-error" style="color:red"></div>
     </div>
-    <div id="contacts" style="max-width:420px; margin-bottom:12px; background:#fff; border-radius:8px; border:1px solid #ccc; padding:10px;">
-    <b>Kontaktlar:</b>
+    <div id="contacts" style="max-width:420px; margin-bottom:12px; background:#fff; border-radius:8px; border:1px solid #ccc; padding:10px; display:none;">
+    <b>Kontaktlaringiz:</b>
     <ul id="contacts-list" style="list-style:none; padding:0; margin:0;"></ul>
+    <hr>
+    <b>Barcha foydalanuvchilar:</b>
+    <ul id="users-list" style="list-style:none; padding:0; margin:0;"></ul>
 </div>
     <div id="chat-box"></div>
     <div id="chat-controls">
@@ -268,32 +271,32 @@
 
         // Emoji picker orqali emoji yuborish
         document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
-        messageInput.value += event.detail.unicode;
-        messageInput.focus();
-    });
+            messageInput.value += event.detail.unicode;
+            messageInput.focus();
+        });
 
         function appendMessage(sender, name, text) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'msg ' + sender;
-    if (sender === 'other') {
-        // Faqat boshqalar uchun ism chiqsin
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'name';
-        nameSpan.textContent = name;
-        msgDiv.appendChild(nameSpan);
-    }
-    if (text && text.startsWith && text.startsWith('img:')) {
-        const img = document.createElement('img');
-        img.src = text.replace('img:', '');
-        img.alt = 'sticker';
-        img.style.width = '48px';
-        msgDiv.appendChild(img);
-    } else {
-        msgDiv.appendChild(document.createTextNode(text));
-    }
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg ' + sender;
+            if (sender === 'other') {
+                // Faqat boshqalar uchun ism chiqsin
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'name';
+                nameSpan.textContent = name;
+                msgDiv.appendChild(nameSpan);
+            }
+            if (text && text.startsWith && text.startsWith('img:')) {
+                const img = document.createElement('img');
+                img.src = text.replace('img:', '');
+                img.alt = 'sticker';
+                img.style.width = '48px';
+                msgDiv.appendChild(img);
+            } else {
+                msgDiv.appendChild(document.createTextNode(text));
+            }
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
         
         ws.onmessage = function(event) {
             let data;
@@ -342,23 +345,23 @@
         });
 
         function loadContacts() {
-    fetch('http://localhost:4001/users')
-        .then(r => r.json())
-        .then(users => {
-            const ul = document.getElementById('contacts-list');
-            ul.innerHTML = '';
-            users.forEach(u => {
-                const li = document.createElement('li');
-                li.textContent = u.username;
-                ul.appendChild(li);
-            });
-        });
-}
-// Kirganda kontaktlarni yuklash
-window.onload = function() {
-    loadContacts();
-    // ...bor kodlar...
-};
+            fetch('http://localhost:4001/users')
+                .then(r => r.json())
+                .then(users => {
+                    const ul = document.getElementById('contacts-list');
+                    ul.innerHTML = '';
+                    users.forEach(u => {
+                        const li = document.createElement('li');
+                        li.textContent = u.username;
+                        ul.appendChild(li);
+                    });
+                });
+        }
+        // Kirganda kontaktlarni yuklash
+        window.onload = function() {
+            loadContacts();
+            // ...bor kodlar...
+        };
     </script>
     <!-- Emoji picker kutubxonasi -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>

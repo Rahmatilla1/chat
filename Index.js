@@ -2,109 +2,89 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const http = require('http');
 const WebSocket = require('ws');
-const webpush = require('web-push');
-const cors = require('cors');
 const fs = require('fs');
+const cors = require('cors');
 const PORT = process.env.PORT || 4001;
-
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const vapidKeys = {
-  publicKey: 'BO9Yb27493XMq3AOqzZ67k81BELQxTjULRSoymwwi0W4ihVg4yFkcEgeoZTKXvfVdVM4_yhC_QVYQc54-THfkSY',
-  privateKey: 'QbxrsqzodqIcq9gvk0LQRzMGknahZCvzcJFdI0cr3hU'
-};
-
-webpush.setVapidDetails(
-  'mailto:your@email.com',
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
-
-let subscriptions = [];
-let users = []; // { username, password }
-let sessions = {}; // { token: username }
 const USERS_FILE = 'users.json';
+let users = []; // { username, password, contacts: [] }
+let sessions = {}; // { token: username }
 
+// Foydalanuvchilarni fayldan yuklash
 if (fs.existsSync(USERS_FILE)) {
     users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
 }
 
+// Ro'yxatdan o'tish
 app.post('/register', (req, res) => {
     const { username, password } = req.body;
     if (users.find(u => u.username === username)) {
         return res.status(400).json({ error: 'Username already exists' });
     }
-    users.push({ username, password });
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2)); // Saqlash
+    users.push({ username, password, contacts: [] });
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
     res.json({ success: true });
 });
 
+// Login
+function generateToken() {
+    return Math.random().toString(36).substr(2, 16);
+}
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    const user = users.find(u => u.username === username && u.password === password);
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    const token = generateToken();
+    sessions[token] = username;
+    res.json({ token, username });
+});
+
+// Barcha foydalanuvchilar ro'yxati (parolsiz)
 app.get('/users', (req, res) => {
-    // Parollarni yubormaymiz!
     res.json(users.map(u => ({ username: u.username })));
 });
 
-function generateToken() {
-  return Math.random().toString(36).substr(2, 16);
-}
-
-// Ro'yxatdan o'tish
-app.post('/register', (req, res) => {
-  const { username, password } = req.body;
-  if (users.find(u => u.username === username)) {
-    return res.status(400).json({ error: 'Username already exists' });
-  }
-  users.push({ username, password });
-  res.json({ success: true });
+// Foydalanuvchining kontaktlari
+app.get('/contacts', (req, res) => {
+    const token = req.headers.authorization;
+    const username = sessions[token];
+    if (!username) return res.status(401).json({ error: 'Unauthorized' });
+    const user = users.find(u => u.username === username);
+    res.json(user.contacts || []);
 });
 
-// Login
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-  const token = generateToken();
-  sessions[token] = username;
-  res.json({ token, username });
+// Kontaktga qo'shish
+app.post('/contacts/add', (req, res) => {
+    const token = req.headers.authorization;
+    const username = sessions[token];
+    if (!username) return res.status(401).json({ error: 'Unauthorized' });
+    const { contact } = req.body;
+    const user = users.find(u => u.username === username);
+    if (!user.contacts.includes(contact) && contact !== username) {
+        user.contacts.push(contact);
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    }
+    res.json({ success: true });
 });
 
-// Push subscription qabul qilish
-app.post('/subscribe', (req, res) => {
-  subscriptions.push(req.body);
-  res.status(201).json({});
-});
-
-// HTTP va WebSocket server
+// WebSocket va chat kodlari (o'zgarmaydi)
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-
 wss.on('connection', function connection(ws) {
-  ws.on('message', function incoming(message) {
-    let msgObj;
-    try {
-      msgObj = JSON.parse(message);
-    } catch (e) {
-      return;
-    }
-    // Barcha clientlarga chat xabarini yuborish
-    wss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(msgObj));
-      }
+    ws.on('message', function incoming(message) {
+        let msgObj;
+        try { msgObj = JSON.parse(message); } catch (e) { return; }
+        wss.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(msgObj));
+            }
+        });
     });
-    // Push notification yuborish
-    subscriptions.forEach(sub => {
-      webpush.sendNotification(sub, JSON.stringify({
-        title: msgObj.name + " dan xabar",
-        body: msgObj.text
-      })).catch(err => console.error(err));
-    });
-  });
 });
-
 server.listen(PORT, () => {
-  console.log(`WebSocket server ${PORT}-portda ishlayapti`);
+    console.log(`WebSocket server ${PORT}-portda ishlayapti`);
 });
