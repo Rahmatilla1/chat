@@ -63,6 +63,8 @@ app.post('/contacts/add', (req, res) => {
     const user = users.find(u => u.username === username);
     if (!user.contacts.includes(contact) && contact !== username) {
         user.contacts.push(contact);
+        // YANGI QATOR: Faylga yozishdan oldin users massivini konsolda tekshiring
+        console.log('Yangi contacts:', users);
         fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
     }
     res.json({ success: true });
