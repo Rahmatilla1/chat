@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Odamlar Chat</title>
-    <style>
+    
+<style>
         html, body { height: 100%; margin: 0; padding: 0; background: #f4f4f4; }
         body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; }
         h2 { margin-top: 24px; margin-bottom: 12px; color: #222; }
@@ -39,7 +40,6 @@
             #send { width: 55px; font-size: 0.95em; }
         }
     </style>
-    </style>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#f4f4f4">
 </head>
@@ -66,8 +66,8 @@
     <emoji-picker id="emojiPicker"></emoji-picker>
 
     <script>
-        let token = null;
-        let myName = "";
+        let token = localStorage.getItem('token') || null;
+        let myName = localStorage.getItem('myName') || "";
         let currentChat = null;
 
         const chatBox = document.getElementById('chat-box');
@@ -80,6 +80,12 @@
         const userSelectDiv = document.getElementById('user-select');
         const userList = document.getElementById('userList');
         const startChatBtn = document.getElementById('startChat');
+
+        // Avtomatik login holatini tiklash
+        if (token && myName) {
+            authDiv.style.display = 'none';
+            loadAllUsers();
+        }
 
         // Kirish
         loginBtn.onclick = function() {
@@ -95,6 +101,8 @@
                 if (data.token) {
                     token = data.token;
                     myName = data.username;
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('myName', myName);
                     authDiv.style.display = 'none';
                     loadAllUsers();
                 } else {
@@ -117,7 +125,8 @@
                 if (data.success) {
                     authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
                     authDiv.style.display = 'none';
-                    loadAllUsers();
+                    // Avtomatik login qilish uchun:
+                    loginBtn.onclick();
                 } else {
                     authError.textContent = data.error || 'Xatolik';
                 }
@@ -217,6 +226,9 @@
         if (window.Notification && Notification.permission !== "granted") {
             Notification.requestPermission();
         }
+
+        // Logout funksiyasi (ixtiyoriy)
+        // localStorage.removeItem('token'); localStorage.removeItem('myName');
     </script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 </body>
