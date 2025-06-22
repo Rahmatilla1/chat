@@ -80,49 +80,52 @@
         const authError = document.getElementById('auth-error');
 
         // Kirish
-        loginBtn.onclick = function() {
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            fetch('http://localhost:4001/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.token) {
-                    token = data.token;
-                    myName = data.username;
-                    authDiv.style.display = 'none';
-                    document.getElementById('contacts').style.display = '';
-                    loadContacts();
-                    loadAllUsers();
-                } else {
-                    authError.textContent = data.error || 'Xatolik';
-                }
-            });
-        };
+        // Kirish
+loginBtn.onclick = function() {
+    const username = document.getElementById('auth-username').value.trim();
+    const password = document.getElementById('auth-password').value.trim();
+    fetch('http://localhost:4001/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.token) {
+            token = data.token;
+            myName = data.username;
+            authDiv.style.display = 'none'; // <-- SHU YERGA
+            document.getElementById('contacts').style.display = ''; // <-- SHU YERGA
+            loadContacts();
+            loadAllUsers();
+        } else {
+            authError.textContent = data.error || 'Xatolik';
+        }
+    });
+};
 
-        // Ro'yxatdan o'tish
-        registerBtn.onclick = function() {
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            fetch('http://localhost:4001/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
-                    loadContacts();
-                    loadAllUsers();
-                } else {
-                    authError.textContent = data.error || 'Xatolik';
-                }
-            });
-        };
+// Ro'yxatdan o'tish
+registerBtn.onclick = function() {
+    const username = document.getElementById('auth-username').value.trim();
+    const password = document.getElementById('auth-password').value.trim();
+    fetch('http://localhost:4001/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
+            authDiv.style.display = 'none'; // <-- SHU YERGA
+            document.getElementById('contacts').style.display = ''; // <-- SHU YERGA
+            loadContacts();
+            loadAllUsers();
+        } else {
+            authError.textContent = data.error || 'Xatolik';
+        }
+    });
+};
 
         // Kontaktlarni yuklash va kontaktga bosilganda chat ochish
         function loadContacts() {
