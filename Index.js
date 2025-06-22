@@ -4,7 +4,9 @@ const http = require('http');
 const WebSocket = require('ws');
 const webpush = require('web-push');
 const cors = require('cors');
+const fs = require('fs');
 const PORT = process.env.PORT || 4001;
+
 
 const app = express();
 app.use(bodyParser.json());
@@ -24,6 +26,26 @@ webpush.setVapidDetails(
 let subscriptions = [];
 let users = []; // { username, password }
 let sessions = {}; // { token: username }
+const USERS_FILE = 'users.json';
+
+if (fs.existsSync(USERS_FILE)) {
+    users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
+}
+
+app.post('/register', (req, res) => {
+    const { username, password } = req.body;
+    if (users.find(u => u.username === username)) {
+        return res.status(400).json({ error: 'Username already exists' });
+    }
+    users.push({ username, password });
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2)); // Saqlash
+    res.json({ success: true });
+});
+
+app.get('/users', (req, res) => {
+    // Parollarni yubormaymiz!
+    res.json(users.map(u => ({ username: u.username })));
+});
 
 function generateToken() {
   return Math.random().toString(36).substr(2, 16);
