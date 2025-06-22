@@ -14,22 +14,31 @@
         #auth button:last-child { margin-right: 0; }
         #auth-error { min-height: 18px; }
         #chat-box {
-    width: 100%;
-    max-width: 800px;   /* Kengligini oshirdik */
-    height: 400px;      /* Balandligini oshirdik */
-    font-size: 1.1em;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    background: #fff;
-    overflow-y: auto;
-    padding: 12px 6px 12px 6px;
-    box-sizing: border-box;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-        .msg { max-width: 80%; padding: 8px 14px; border-radius: 18px; margin: 2px 0; font-size: 1em; word-break: break-word; display: inline-block; position: relative; clear: both; }
+            width: 100%;
+            max-width: 800px;
+            min-height: 400px;
+            height: 400px;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            background: #fff;
+            overflow-y: auto;
+            padding: 12px 6px 12px 6px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            display: block;
+        }
+        .msg {
+            max-width: 80%;
+            padding: 8px 14px;
+            border-radius: 18px;
+            margin: 2px 0;
+            font-size: 1em;
+            word-break: break-word;
+            display: block; /* MUHIM: xabarlar pastga tushadi */
+            position: relative;
+            clear: both;
+        }
         .me { align-self: flex-end; background: #dcf8c6; color: #222; border-bottom-right-radius: 4px; border-bottom-left-radius: 18px; border-top-left-radius: 18px; border-top-right-radius: 18px; text-align: right; box-shadow: 0 1px 2px #b2dfdb44; }
         .other { align-self: flex-start; background: #fff; color: #222; border-bottom-left-radius: 4px; border-bottom-right-radius: 18px; border-top-left-radius: 18px; border-top-right-radius: 18px; text-align: left; box-shadow: 0 1px 2px #b2dfdb44; border: 1px solid #e0e0e0; }
         .msg .name { font-size: 0.85em; font-weight: bold; color: #1976d2; margin-bottom: 2px; display: block; }
@@ -71,13 +80,11 @@
     <div id="chat-controls">
         <input type="text" id="message" placeholder="Xabar yozing..." disabled>
         <button id="send" disabled>Yuborish</button>
-        <!-- Chat controlsga qo‘shing -->
-<button id="recordBtn">🎤 Ovoz yozish</button>
+        <button id="recordBtn">🎤 Ovoz yozish</button>
     </div>
     <emoji-picker id="emojiPicker"></emoji-picker>
-
     <!-- ...existing code... -->
-<script>
+    <script>
     let token = localStorage.getItem('token') || null;
     let myName = localStorage.getItem('myName') || "";
     let currentChat = localStorage.getItem('currentChat') || null;
@@ -327,7 +334,6 @@
     // Logout tugmasi qo'shish uchun:
     // <button onclick="logout()">Chiqish</button>
 </script>
-<!-- ...existing code... -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 </body>
 </html>
