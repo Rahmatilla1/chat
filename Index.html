@@ -130,27 +130,27 @@ registerBtn.onclick = function() {
 
         // Kontaktlarni yuklash va kontaktga bosilganda chat ochish
         function loadContacts() {
-            if (!token) return;
-            fetch(`${API_URL}/contacts`, { headers: { Authorization: token } })
-                .then(r => r.json())
-                .then(contacts => {
-                    const ul = document.getElementById('contacts-list');
-                    ul.innerHTML = '';
-                    contacts.forEach(name => {
-                        const li = document.createElement('li');
-                        li.textContent = name;
-                        li.onclick = function() {
-                            currentChat = name;
-                            document.querySelectorAll('#contacts-list li').forEach(el => el.classList.remove('active'));
-                            li.classList.add('active');
-                            messageInput.disabled = false;
-                            sendBtn.disabled = false;
-                            loadChatHistory();
-                        };
-                        ul.appendChild(li);
-                    });
-                });
-        }
+    if (!token) return;
+    fetch(`${API_URL}/contacts`, { headers: { Authorization: token } })
+        .then(r => r.json())
+        .then(contacts => {
+            const ul = document.getElementById('contacts-list');
+            ul.innerHTML = '';
+            contacts.forEach(name => {
+                const li = document.createElement('li');
+                li.textContent = name;
+                li.onclick = function() {
+                    currentChat = name;
+                    document.querySelectorAll('#contacts-list li').forEach(el => el.classList.remove('active'));
+                    li.classList.add('active');
+                    messageInput.disabled = false;
+                    sendBtn.disabled = false;
+                    loadChatHistory();
+                };
+                ul.appendChild(li);
+            });
+        });
+}
 
         // Barcha foydalanuvchilar ro'yxati va kontaktga qo'shish
         function loadAllUsers() {
