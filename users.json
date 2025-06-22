@@ -2,7 +2,9 @@
   {
     "username": "Nig'matilla",
     "password": "aloo",
-    "contacts": []
+    "contacts": [
+      "Rahmatilla"
+    ]
   },
   {
     "username": "Rahmatilla",
@@ -17,6 +19,16 @@
   {
     "username": "xk",
     "password": "123",
+    "contacts": []
+  },
+  {
+    "username": "testuser",
+    "password": "testpass",
+    "contacts": []
+  },
+  {
+    "username": "testuser1",
+    "password": "testpass1",
     "contacts": []
   }
 ]

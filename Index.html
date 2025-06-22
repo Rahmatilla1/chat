@@ -140,13 +140,13 @@ registerBtn.onclick = function() {
                 const li = document.createElement('li');
                 li.textContent = name;
                 li.onclick = function() {
-                    currentChat = name;
-                    document.querySelectorAll('#contacts-list li').forEach(el => el.classList.remove('active'));
-                    li.classList.add('active');
-                    messageInput.disabled = false;
-                    sendBtn.disabled = false;
-                    loadChatHistory();
-                };
+                currentChat = name;
+                document.querySelectorAll('#contacts-list li').forEach(el => el.classList.remove('active'));
+                li.classList.add('active');
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                loadChatHistory();
+            };
                 ul.appendChild(li);
             });
         });
