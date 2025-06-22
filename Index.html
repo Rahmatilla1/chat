@@ -84,7 +84,7 @@
 loginBtn.onclick = function() {
     const username = document.getElementById('auth-username').value.trim();
     const password = document.getElementById('auth-password').value.trim();
-    fetch('http://localhost:4001/login', {
+    fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -108,7 +108,7 @@ loginBtn.onclick = function() {
 registerBtn.onclick = function() {
     const username = document.getElementById('auth-username').value.trim();
     const password = document.getElementById('auth-password').value.trim();
-    fetch('http://localhost:4001/register', {
+    fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
