@@ -70,7 +70,8 @@
         let token = null;
         let myName = "";
         let currentChat = null;
-
+        // <script> ichida eng yuqoriga qo‘shing:
+const API_URL = location.hostname === "localhost" ? "http://localhost:4001" : `http://${location.hostname}:4001`;
         const chatBox = document.getElementById('chat-box');
         const messageInput = document.getElementById('message');
         const sendBtn = document.getElementById('send');
@@ -130,7 +131,7 @@ registerBtn.onclick = function() {
         // Kontaktlarni yuklash va kontaktga bosilganda chat ochish
         function loadContacts() {
             if (!token) return;
-            fetch('http://localhost:4001/contacts', { headers: { Authorization: token } })
+            fetch(`${API_URL}/contacts`, { headers: { Authorization: token } })
                 .then(r => r.json())
                 .then(contacts => {
                     const ul = document.getElementById('contacts-list');
@@ -154,7 +155,7 @@ registerBtn.onclick = function() {
         // Barcha foydalanuvchilar ro'yxati va kontaktga qo'shish
         function loadAllUsers() {
             if (!token) return;
-            fetch('http://localhost:4001/users')
+            fetch(`${API_URL}/users`)
                 .then(r => r.json())
                 .then(users => {
                     const ul = document.getElementById('all-users-list');
@@ -166,7 +167,7 @@ registerBtn.onclick = function() {
                             const btn = document.createElement('button');
                             btn.textContent = "Kontaktga qo'shish";
                             btn.onclick = function() {
-                                fetch('http://localhost:4001/contacts/add', {
+                                fetch(`${API_URL}/contacts/add`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json', Authorization: token },
                                     body: JSON.stringify({ contact: u.username })
@@ -184,7 +185,7 @@ registerBtn.onclick = function() {
         // Chat tarixini yuklash
         function loadChatHistory() {
             if (!currentChat) return;
-            fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
+            fetch(`${API_URL}/chat/${currentChat}`, { headers: { Authorization: token } })
                 .then(r => r.json())
                 .then(msgs => {
                     chatBox.innerHTML = '';
@@ -198,7 +199,7 @@ registerBtn.onclick = function() {
         function sendPrivateMessage() {
             const text = messageInput.value.trim();
             if (!text || !currentChat) return;
-            fetch('http://localhost:4001/chat/send', {
+            fetch(`${API_URL}/chat/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: token },
                 body: JSON.stringify({ to: currentChat, text })
