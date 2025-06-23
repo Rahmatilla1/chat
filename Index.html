@@ -332,50 +332,24 @@
     let ws;
 
     function connectWebSocket() {
-    if (ws && ws.readyState === WebSocket.OPEN) return;
-
-    console.log("WebSocket ulanmoqda...");
-    ws = new WebSocket('wss://chat-x1i3.onrender.com');
-
-    ws.onopen = function () {
-        console.log("WebSocket ochiq");
+        if (ws) ws.close();
+        ws = new WebSocket('ws://chat-x1i3.onrender.com');
+        ws.onopen = function() {
         token = localStorage.getItem('token');
         if (token) ws.send(JSON.stringify({ type: 'auth', token }));
     };
-
-    ws.onmessage = function (event) {
-        try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'new_message') {
-                if (token && currentChat) loadChatHistory();
-            }
-        } catch (e) {
-            console.error("Xabar qayta ishlashda xato:", e);
-        }
-    };
-
-    ws.onclose = function () {
-        console.log("WebSocket uzildi, qayta urinib ko'rilmoqda...");
-        setTimeout(connectWebSocket, 5000); // Har 5 soniyada qayta urinish
-    };
-
-    ws.onerror = function (error) {
-        console.error("WebSocket xatosi:", error);
-        ws.close();
-    };
-}
-
-// Xabarni DOM ga qo'shish + localStorage ga qo'shish
-function appendMessage(sender, name, text, time) {
-    const msgDiv = document.createElement('div');
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    // LocalStorage saqlash
-    const saved = JSON.parse(localStorage.getItem(`chat_${currentChat}`) || "[]");
-    saved.push({ sender, name, text, time });
-    localStorage.setItem(`chat_${currentChat}`, JSON.stringify(saved));
-}
+        ws.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'new_message') {
+                    if (token && currentChat) loadChatHistory();
+                }
+            } catch (e) {}
+        };
+        ws.onclose = function() {
+            setTimeout(connectWebSocket, 3000);
+        };
+    }
 
     function showAuth(show) {
         authDiv.style.display = show ? '' : 'none';
