@@ -4,27 +4,266 @@
     <meta charset="UTF-8">
     <title>Odamlar Chat</title>
     <style>
-        /* ...style'laringiz o'zgarishsiz qoldi... */
-        html, body { height: 100%; margin: 0; padding: 0; background: #f4f4f4; }
-        body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; }
-        #auth, #chat-controls, emoji-picker { width: 100%; max-width: 420px; box-sizing: border-box; }
-        #auth { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 18px 16px 10px 16px; margin-bottom: 12px; margin-top: 10px; }
-        #auth input { width: 100%; margin-bottom: 8px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; }
-        #auth button { width: 48%; margin-right: 2%; margin-bottom: 8px; padding: 8px 0; border-radius: 5px; border: 1px solid rgb(82, 255, 47); background: rgb(82, 255, 47); color: #222; font-weight: bold; cursor: pointer; }
-        #auth button:last-child { margin-right: 0; }
-        #chat-box { width: 100%; max-width: 800px; min-height: 400px; height: 400px; font-size: 1.1em; margin-bottom: 10px; border: 1px solid #ccc; background: #fff; overflow-y: auto; padding: 12px 6px; box-sizing: border-box; border-radius: 8px; }
-        .msg { max-width: 80%; padding: 8px 14px; border-radius: 18px; margin: 2px 0; font-size: 1em; word-break: break-word; display: block; position: relative; clear: both; }
-        .me { align-self: flex-end; background: #dcf8c6; color: #222; border-bottom-right-radius: 4px; border-bottom-left-radius: 18px; text-align: right; }
-        .other { align-self: flex-start; background: #fff; color: #222; border-bottom-left-radius: 4px; border-bottom-right-radius: 18px; text-align: left; border: 1px solid #e0e0e0; }
-        .msg .name { font-size: 0.85em; font-weight: bold; color: #1976d2; margin-bottom: 2px; display: block; }
-        #chat-controls { display: flex; width: 100%; max-width: 420px; gap: 2%; margin-bottom: 10px; }
-        #message, #send { box-sizing: border-box; }
-        #message { flex: 1 1 0; padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
-        #send { width: 90px; padding: 8px 0; color: black; border-radius: 5px; border: 1px solid rgb(82, 255, 47); background: rgb(82, 255, 47); font-weight: bold; cursor: pointer; }
-        emoji-picker { width: 100%; max-width: 420px; margin-bottom: 10px; }
-        @media (max-width: 600px) { #auth, #chat-box, #chat-controls, emoji-picker { max-width: 100vw; width: 98vw; } #chat-box { height: 45vw; min-height: 180px; font-size: 1em; } #send { width: 70px; font-size: 1em; } }
-        @media (max-width: 400px) { #chat-box { height: 120px; font-size: 0.95em; } #send { width: 55px; font-size: 0.95em; } }
-    </style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    }
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    h2 {
+        margin-top: 24px;
+        color: #1976d2;
+        letter-spacing: 1px;
+        font-weight: 700;
+    }
+    #auth, #chat-controls, emoji-picker {
+        width: 100%;
+        max-width: 420px;
+        box-sizing: border-box;
+    }
+    #auth {
+        background: #fff;
+        border: 1px solid #e3e3e3;
+        border-radius: 12px;
+        padding: 22px 18px 14px 18px;
+        margin-bottom: 16px;
+        margin-top: 10px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    #auth input {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #bdbdbd;
+        box-sizing: border-box;
+        font-size: 1em;
+        background: #f7fafd;
+        transition: border 0.2s;
+    }
+    #auth input:focus {
+        border: 1.5px solid #1976d2;
+        outline: none;
+        background: #fff;
+    }
+    #auth button {
+        width: 48%;
+        margin-right: 2%;
+        margin-bottom: 10px;
+        padding: 10px 0;
+        border-radius: 6px;
+        border: none;
+        background: linear-gradient(90deg, #42e695 0%, #3bb2b8 100%);
+        color: #fff;
+        font-weight: bold;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    #auth button:last-child { margin-right: 0; }
+    #auth button:hover {
+        background: linear-gradient(90deg, #3bb2b8 0%, #42e695 100%);
+    }
+    #chat-box {
+        width: 100%;
+        max-width: 800px;
+        min-height: 320px;
+        height: 400px;
+        font-size: 1.08em;
+        margin-bottom: 12px;
+        border: 1px solid #e3e3e3;
+        background: #fafdff;
+        overflow-y: auto;
+        padding: 14px 8px;
+        box-sizing: border-box;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .msg {
+        max-width: 80%;
+        padding: 10px 16px;
+        border-radius: 20px;
+        margin: 2px 0;
+        font-size: 1em;
+        word-break: break-word;
+        display: inline-block;
+        position: relative;
+        clear: both;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        line-height: 1.5;
+    }
+    .me {
+        align-self: flex-end;
+        background: linear-gradient(90deg, #e0ffe9 0%, #b2f7ef 100%);
+        color: #222;
+        border-bottom-right-radius: 6px;
+        border-bottom-left-radius: 20px;
+        text-align: right;
+        margin-left: auto;
+    }
+    .other {
+        align-self: flex-start;
+        background: #fff;
+        color: #222;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 20px;
+        text-align: left;
+        border: 1px solid #e0e0e0;
+        margin-right: auto;
+    }
+    .msg .name {
+        font-size: 0.85em;
+        font-weight: bold;
+        color: #1976d2;
+        margin-bottom: 2px;
+        display: block;
+    }
+    #chat-controls {
+        display: flex;
+        width: 100%;
+        max-width: 420px;
+        gap: 2%;
+        margin-bottom: 12px;
+    }
+    #message, #send {
+        box-sizing: border-box;
+    }
+    #message {
+        flex: 1 1 0;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #bdbdbd;
+        font-size: 1em;
+        background: #f7fafd;
+        transition: border 0.2s;
+    }
+    #message:focus {
+        border: 1.5px solid #1976d2;
+        outline: none;
+        background: #fff;
+    }
+    #send, #recordBtn {
+        width: 90px;
+        padding: 10px 0;
+        color: #fff;
+        border-radius: 6px;
+        border: none;
+        background: linear-gradient(90deg, #42e695 0%, #3bb2b8 100%);
+        font-weight: bold;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    #send:disabled, #recordBtn:disabled {
+        background: #bdbdbd;
+        cursor: not-allowed;
+    }
+    #send:hover, #recordBtn:hover {
+        background: linear-gradient(90deg, #3bb2b8 0%, #42e695 100%);
+    }
+    #recordBtn {
+        width: 48px;
+        padding: 0;
+        font-size: 1.3em;
+        margin-left: 4px;
+    }
+    emoji-picker {
+        width: 100%;
+        max-width: 420px;
+        margin-bottom: 12px;
+    }
+    #user-select {
+        width: 100%;
+        max-width: 420px;
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #e3e3e3;
+        margin-bottom: 14px;
+        padding: 10px 12px;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+    }
+    #user-select select, #user-select button {
+        font-size: 1em;
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 1px solid #bdbdbd;
+        margin-right: 6px;
+        margin-bottom: 4px;
+    }
+    #user-select button {
+        background: linear-gradient(90deg, #42e695 0%, #3bb2b8 100%);
+        color: #fff;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    #user-select button:hover {
+        background: linear-gradient(90deg, #3bb2b8 0%, #42e695 100%);
+    }
+    #user-actions {
+        width: 100%;
+        max-width: 420px;
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        justify-content: flex-end;
+    }
+    #user-actions button {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: none;
+        font-weight: bold;
+        font-size: 1em;
+        cursor: pointer;
+        background: #f5f5f5;
+        color: #1976d2;
+        transition: background 0.2s;
+    }
+    #user-actions button:hover {
+        background: #e3e3e3;
+    }
+    #user-actions button[style*="color:red"] {
+        color: #e53935 !important;
+        border: 1px solid #e53935;
+        background: #fff;
+    }
+    #user-actions button[style*="color:red"]:hover {
+        background: #ffeaea;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+        #chat-box { max-width: 98vw; }
+    }
+    @media (max-width: 600px) {
+        #auth, #chat-box, #chat-controls, emoji-picker, #user-select, #user-actions {
+            max-width: 100vw;
+            width: 98vw;
+        }
+        #chat-box { height: 45vw; min-height: 180px; font-size: 1em; }
+        #send, #recordBtn { width: 70px; font-size: 1em; }
+        #user-actions { flex-direction: column; align-items: stretch; }
+    }
+    @media (max-width: 400px) {
+        #chat-box { height: 120px; font-size: 0.95em; }
+        #send, #recordBtn { width: 55px; font-size: 0.95em; }
+        #auth, #chat-controls, emoji-picker, #user-select, #user-actions {
+            padding-left: 2vw;
+            padding-right: 2vw;
+        }
+    }
+</style>
 </head>
 <body>
     <h2>Odamlar Chat</h2>
@@ -75,7 +314,7 @@
 
     function connectWebSocket() {
         if (ws) ws.close();
-        ws = new WebSocket('ws://localhost:4001');
+        ws = new WebSocket('ws://chat-x1i3.onrender.com');
         ws.onopen = function() {
             if (token) ws.send(JSON.stringify({ type: 'auth', token }));
         };
@@ -131,7 +370,7 @@
             delBtn.style.cursor = 'pointer';
             delBtn.onclick = function() {
                 if (confirm("Xabarni o‘chirishni istaysizmi?")) {
-                    fetch('http://localhost:4001/chat/delete', {
+                    fetch('https://chat-x1i3.onrender.com/chat/delete', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', Authorization: token },
                         body: JSON.stringify({ to: currentChat, index })
@@ -145,7 +384,7 @@
     }
 
     function loadAllUsers(cb) {
-        fetch('http://localhost:4001/users')
+        fetch('https://chat-x1i3.onrender.com/users')
             .then(r => r.json())
             .then(users => {
                 userList.innerHTML = '';
@@ -164,7 +403,7 @@
 
     function loadChatHistory() {
         if (!token || !currentChat) return;
-        fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
+        fetch(`https://chat-x1i3.onrender.com/chat/${currentChat}`, { headers: { Authorization: token } })
             .then(r => {
                 if (r.status === 401) { logout(); return []; }
                 return r.json();
@@ -185,7 +424,7 @@
     function sendPrivateMessage() {
         const text = messageInput.value.trim();
         if (!text || !currentChat || !token) return;
-        fetch('http://localhost:4001/chat/send', {
+        fetch('https://chat-x1i3.onrender.com/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: token },
             body: JSON.stringify({ to: currentChat, text })
@@ -222,7 +461,7 @@
     loginBtn.onclick = function() {
         const username = document.getElementById('auth-username').value.trim();
         const password = document.getElementById('auth-password').value.trim();
-        fetch('http://localhost:4001/login', {
+        fetch('https://chat-x1i3.onrender.com/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -246,7 +485,7 @@
     registerBtn.onclick = function() {
         const username = document.getElementById('auth-username').value.trim();
         const password = document.getElementById('auth-password').value.trim();
-        fetch('http://localhost:4001/register', {
+        fetch('https://chat-x1i3.onrender.com/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -303,7 +542,7 @@
                 const reader = new FileReader();
                 reader.onloadend = function() {
                     const base64audio = reader.result;
-                    fetch('http://localhost:4001/chat/send', {
+                    fetch('https://chat-x1i3.onrender.com/chat/send', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', Authorization: token },
                         body: JSON.stringify({ to: currentChat, text: base64audio, type: 'audio' })
@@ -320,7 +559,7 @@
 
     deleteUserBtn.onclick = function() {
         if (confirm("Akkauntingizni butunlay o‘chirishni istaysizmi?")) {
-            fetch('http://localhost:4001/user/delete', {
+            fetch('https://chat-x1i3.onrender.com/user/delete', {
                 method: 'POST',
                 headers: { Authorization: token }
             })
@@ -337,7 +576,7 @@
     };
 
     function logout() {
-        fetch('http://localhost:4001/logout', {
+        fetch('https://chat-x1i3.onrender.com/logout', {
             method: 'POST',
             headers: { Authorization: token }
         });
@@ -359,7 +598,7 @@ if ('serviceWorker' in navigator && 'PushManager' in window) {
                     applicationServerKey: 'BE2xPCwCk9wNYrH8Z0SXxzp4ZbkTTi1YqTpdhYyp67hjgiql0Fpr0zieO4kujvtrAi4z0ZARTRgh0mx7_g21Qww'
                 }).then(newSub => {
                     // Subscriptionni backendga yuborish
-                    fetch('http://localhost:4001/subscribe', {
+                    fetch('https://chat-x1i3.onrender.com/subscribe', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(newSub)
