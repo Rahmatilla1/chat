@@ -86,17 +86,29 @@ app.get('/chat/:withUser', (req, res) => {
 });
 
 app.post('/chat/send', (req, res) => {
-  const user = getTokenUser(req.headers.authorization);
-  if (!user) return res.status(401).json({ error: 'Unauthorized' });
-  const { to, text } = req.body;
-  const key = [user, to].sort().join('|');
-  if (!chats[key]) chats[key] = [];
-  chats[key].push({ from: user, to, text, time: Date.now() });
-  saveJSON(CHATS_FILE, chats);
-  notifyUser(to);
-  notifyUser(user);
-  sendPushNotification("Yangi xabar!", `${user} sizga yozdi.`);
-  res.json({ success: true });
+    const user = getTokenUser(req.headers.authorization);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { to, text } = req.body;
+    const key = [user, to].sort().join('|');
+    if (!chats[key]) chats[key] = [];
+
+    const message = { from: user, to, text, time: Date.now() };
+    chats[key].push(message);
+    saveJSON(CHATS_FILE, chats);
+
+    // WebSocket orqali xabar jo'natish
+    if (sockets[to]) {
+        sockets[to].send(JSON.stringify({
+            type: 'new_message',
+            from: user,
+            text,
+            time: message.time
+        }));
+    }
+
+    sendPushNotification("Yangi xabar!", `${user}: ${text}`);
+    res.json({ success: true });
 });
 
 app.post('/chat/delete', (req, res) => {
@@ -142,19 +154,28 @@ app.post('/subscribe', (req, res) => {
 });
 
 // WebSocket
-wss.on('connection', function(ws) {
-  ws.on('message', function(message) {
-    try {
-      const data = JSON.parse(message);
-      if (data.type === 'auth' && data.token && sessions[data.token]) {
-        ws.username = sessions[data.token];
-        sockets[ws.username] = ws;
-      }
-    } catch {}
-  });
-  ws.on('close', function() {
-    if (ws.username) delete sockets[ws.username];
-  });
+wss.on('connection', function connection(ws) {
+    let authenticatedUser = null;
+
+    ws.on('message', function incoming(message) {
+        try {
+            const data = JSON.parse(message);
+            if (data.type === 'auth' && data.token && sessions[data.token]) {
+                authenticatedUser = sessions[data.token];
+                sockets[authenticatedUser] = ws;
+                console.log(`${authenticatedUser} bog'landi`);
+            }
+        } catch (e) {
+            console.error("Autentifikatsiya xatosi", e);
+        }
+    });
+
+    ws.on('close', function () {
+        if (authenticatedUser) {
+            delete sockets[authenticatedUser];
+            console.log(`${authenticatedUser} uzildi`);
+        }
+    });
 });
 
 server.listen(PORT, () => {
