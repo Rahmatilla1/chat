@@ -37,16 +37,6 @@ app.post('/subscribe', (req, res) => {
   res.status(201).json({});
 });
 
-app.post('/send-notification', (req, res) => {
-  const notification = req.body;
-  const subscriptions = db.getSubscriptions();
-  subscriptions.forEach(subscription => {
-    webpush.sendNotification(subscription, notification)
-      .catch(err => console.error(err));
-  });
-  res.status(201).json({});
-});
-
 function sendPushNotification(title, body) {
     const payload = JSON.stringify({ title, body });
     subscriptions.forEach(sub => {
