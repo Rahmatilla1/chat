@@ -81,7 +81,7 @@
         <input type="text" id="message" placeholder="Xabar yozing..." disabled>
         <button id="send" disabled>Yuborish</button>
         <button id="recordBtn">🎤 Ovoz yozish</button>
-        <div id="user-actions" style="display:none; margin-bottom:10px;">
+        <div id="user-actions" style="margin-bottom:10px;">
                 <button id="logoutBtn">Chiqish (Logout)</button>
                 <button id="deleteUserBtn" style="color:red;">Akkauntni o‘chirish</button>
         </div>
@@ -136,29 +136,31 @@
     }
 
     // Avtomatik login holatini tiklash va chatni tiklash
-    window.addEventListener('DOMContentLoaded', function() {
-        token = localStorage.getItem('token');
-        myName = localStorage.getItem('myName');
-        currentChat = localStorage.getItem('currentChat');
-        if (token && myName) {
-            authDiv.style.display = 'none';
-            loadAllUsers(() => {
-                if (currentChat) {
-                    userList.value = currentChat;
-                    messageInput.disabled = false;
-                    sendBtn.disabled = false;
-                    loadChatHistory();
-                }
-            });
-        } else {
-            // Token yoki ism yo‘q bo‘lsa, login oynasini ko‘rsatish
-            authDiv.style.display = '';
-            userSelectDiv.style.display = 'none';
-            chatBox.innerHTML = '';
-            messageInput.disabled = true;
-            sendBtn.disabled = true;
-        }
-    });
+    // ...existing code...
+window.addEventListener('DOMContentLoaded', function() {
+    token = localStorage.getItem('token');
+    myName = localStorage.getItem('myName');
+    currentChat = localStorage.getItem('currentChat');
+    if (token && myName) {
+        authDiv.style.display = 'none';
+        userActionsDiv.style.display = ''; // <-- BU QATOR MUHIM!
+        loadAllUsers(() => {
+            if (currentChat) {
+                userList.value = currentChat;
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                loadChatHistory();
+            }
+        });
+    } else {
+        authDiv.style.display = '';
+        userSelectDiv.style.display = 'none';
+        userActionsDiv.style.display = 'none'; // <-- Logout tugmasini yashirish
+        chatBox.innerHTML = '';
+        messageInput.disabled = true;
+        sendBtn.disabled = true;
+    }
+});
 
     // Kirish
     loginBtn.onclick = function() {
