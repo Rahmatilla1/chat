@@ -599,11 +599,17 @@
         fetch('https://chat-x1i3.onrender.com/logout', {
             method: 'POST',
             headers: { Authorization: token }
+        })
+        .then(() => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('myName');
+            localStorage.removeItem('currentChat');
+            location.reload();
+        })
+        .catch(err => {
+            console.error('Logout error:', err);
+            alert('Chiqish xatosi yuz berdi.');
         });
-        localStorage.removeItem('token');
-        localStorage.removeItem('myName');
-        localStorage.removeItem('currentChat');
-        location.reload();
     }
     logoutBtn.onclick = logout;
 
