@@ -425,6 +425,24 @@ function loadChatHistory() {
 }
 // ...existing code...
 
+        deleteUserBtn.onclick = function() {
+            if (confirm("Akkauntingizni butunlay o‘chirishni istaysizmi?")) {
+                fetch('https://chat-18ex.onrender.com/user/delete', {
+                    method: 'POST',
+                    headers: { Authorization: token }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Akkauntingiz o‘chirildi.");
+                        logoutBtn.onclick();
+                    } else {
+                        alert(data.error || "Xatolik yuz berdi.");
+                    }
+                });
+            }
+        };
+
     // Logout funksiyasi
     function logout() {
         localStorage.removeItem('token');
