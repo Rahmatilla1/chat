@@ -3,8 +3,16 @@ const http = require('http');
 const WebSocket = require('ws');
 const fs = require('fs');
 const cors = require('cors');
+const webpush = require('web-push');
 const PORT = process.env.PORT || 4001;
 
+const publicVapidKey = 'BE2xPCwCk9wNYrH8Z0SXxzp4ZbkTTi1YqTpdhYyp67hjgiql0Fpr0zieO4kujvtrAi4z0ZARTRgh0mx7_g21Qww';
+const privateVapidKey = 'utwzQSnnIS_xi_u2IP4xbuamgLSNYwKkJbTF_0zfh7w';
+webpush.setVapidDetails(
+  'mailto:youremail@example.com',
+  publicVapidKey,
+  privateVapidKey
+);
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -19,6 +27,21 @@ const sockets = {}; // WebSocket ulanishlari uchun
 // Fayllardan ma'lumotlarni yuklash
 if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
 if (fs.existsSync(CHATS_FILE)) chats = JSON.parse(fs.readFileSync(CHATS_FILE, 'utf-8'));
+
+let subscriptions = [];
+
+app.post('/subscribe', (req, res) => {
+    const subscription = req.body;
+    subscriptions.push(subscription);
+    res.status(201).json({});
+});
+
+function sendPushNotification(title, body) {
+    const payload = JSON.stringify({ title, body });
+    subscriptions.forEach(sub => {
+        webpush.sendNotification(sub, payload).catch(() => {});
+    });
+}
 
 // Ro'yxatdan o'tish
 app.post('/register', (req, res) => {
@@ -67,17 +90,27 @@ function notifyUser(username) {
 }
 
 // Xabar yuborish
+// ...existing code...
+
+// Xabar yuborish
 app.post('/chat/send', (req, res) => {
     const token = req.headers.authorization;
     const username = sessions[token];
     if (!username) return res.status(401).json({ error: 'Unauthorized' });
+
     const { to, text } = req.body;
     const key = [username, to].sort().join('|');
     if (!chats[key]) chats[key] = [];
     chats[key].push({ from: username, to, text, time: Date.now() });
     fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2));
+
+    // WebSocket orqali xabar berish
     notifyUser(to);
     notifyUser(username);
+
+    // Push notification yuborish
+    sendPushNotification("Yangi xabar!", "Sizga yangi xabar keldi.");
+
     res.json({ success: true });
 });
 

@@ -348,8 +348,27 @@
     }
     logoutBtn.onclick = logout;
 
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-    if (window.Notification && Notification.permission !== "granted") Notification.requestPermission();
+    // Service worker va push subscription
+if ('serviceWorker' in navigator && 'PushManager' in window) {
+    navigator.serviceWorker.register('sw.js').then(swReg => {
+        return swReg.pushManager.getSubscription().then(sub => {
+            if (sub === null) {
+                // Subscribe
+                return swReg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: 'BE2xPCwCk9wNYrH8Z0SXxzp4ZbkTTi1YqTpdhYyp67hjgiql0Fpr0zieO4kujvtrAi4z0ZARTRgh0mx7_g21Qww'
+                }).then(newSub => {
+                    // Subscriptionni backendga yuborish
+                    fetch('http://localhost:4001/subscribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newSub)
+                    });
+                });
+            }
+        });
+    });
+}
     </script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 </body>
