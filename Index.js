@@ -1,22 +1,22 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const http = require('http');
 const WebSocket = require('ws');
 const fs = require('fs');
 const cors = require('cors');
 const PORT = process.env.PORT || 4001;
 
+
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(cors());
 
 const USERS_FILE = 'users.json';
 const CHATS_FILE = 'chats.json';
 const sessions = {};
 let users = [];
-let chats = {}; // { "user1|user2": [ {from, to, text, time}, ... ] }
+let chats = {};
 
-// Foydalanuvchilarni va chatlarni yuklash
+// Fayllardan ma'lumotlarni yuklash
 if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
 if (fs.existsSync(CHATS_FILE)) chats = JSON.parse(fs.readFileSync(CHATS_FILE, 'utf-8'));
 
@@ -26,7 +26,7 @@ app.post('/register', (req, res) => {
     if (users.find(u => u.username === username)) {
         return res.status(400).json({ error: 'Username already exists' });
     }
-    users.push({ username, password }); // contacts: [] olib tashlandi
+    users.push({ username, password });
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
     res.json({ success: true });
 });
@@ -44,12 +44,12 @@ app.post('/login', (req, res) => {
     res.json({ token, username });
 });
 
-// Faqat barcha foydalanuvchilar ro'yxati
+// Foydalanuvchilar ro'yxati
 app.get('/users', (req, res) => {
     res.json(users.map(u => ({ username: u.username })));
 });
 
-// Chat tarixini olish (faqat ikki user o‘rtasida)
+// Chat tarixini olish
 app.get('/chat/:withUser', (req, res) => {
     const token = req.headers.authorization;
     const username = sessions[token];
@@ -59,12 +59,21 @@ app.get('/chat/:withUser', (req, res) => {
     res.json(chats[key] || []);
 });
 
-// Xabar yuborish (faqat ikki user o‘rtasida)
+function notifyUser(username) {
+    if (sockets[username]) {
+        sockets[username].send(JSON.stringify({ type: 'new_message' }));
+    }
+}
+
+// Xabar yuborish
 app.post('/chat/send', (req, res) => {
     const token = req.headers.authorization;
     const username = sessions[token];
     if (!username) return res.status(401).json({ error: 'Unauthorized' });
     const { to, text } = req.body;
+    notifyUser(to);
+    notifyUser(from);
+    res.json({ success: true });
     const key = [username, to].sort().join('|');
     if (!chats[key]) chats[key] = [];
     chats[key].push({ from: username, to, text, time: Date.now() });
@@ -72,9 +81,7 @@ app.post('/chat/send', (req, res) => {
     res.json({ success: true });
 });
 
-// ...existing code...
-
-// Xabar o‘chirish (index orqali)
+// Xabar o'chirish
 app.post('/chat/delete', (req, res) => {
     const token = req.headers.authorization;
     const username = sessions[token];
@@ -84,7 +91,6 @@ app.post('/chat/delete', (req, res) => {
     if (!chats[key] || typeof index !== 'number' || index < 0 || index >= chats[key].length) {
         return res.status(400).json({ error: 'Invalid index' });
     }
-    // Faqat o‘zining xabarini o‘chira oladi
     if (chats[key][index].from !== username) {
         return res.status(403).json({ error: 'Faqat o‘z xabaringizni o‘chira olasiz' });
     }
@@ -93,51 +99,52 @@ app.post('/chat/delete', (req, res) => {
     res.json({ success: true });
 });
 
-// ...existing code...
-
-// ...existing code...
-
-// Foydalanuvchini o‘chirish
+// Foydalanuvchini o'chirish
 app.post('/user/delete', (req, res) => {
     const token = req.headers.authorization;
     const username = sessions[token];
     if (!username) return res.status(401).json({ error: 'Unauthorized' });
 
-    // Foydalanuvchini users ro‘yxatidan o‘chirish
     users = users.filter(u => u.username !== username);
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 
-    // Chatlardan ham o‘chirish (ixtiyoriy)
     Object.keys(chats).forEach(key => {
         if (key.includes(username)) delete chats[key];
     });
     fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2));
 
-    // Sessiyani o‘chirish
     delete sessions[token];
-
     res.json({ success: true });
 });
 
-// ...existing code...
-
-// LOGOUT route
+// Logout
 app.post('/logout', (req, res) => {
     const token = req.headers.authorization;
     if (token && sessions[token]) {
-        delete sessions[token]; // Tokenni o‘chirib tashlash
+        delete sessions[token];
         return res.json({ success: true, message: "Logout bo‘ldingiz" });
     }
     res.status(401).json({ success: false, error: "Avtorizatsiya xatosi" });
 });
 
+// WebSocket (minimal, agar ishlatilmasa, olib tashlasa ham bo'ladi)
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-wss.on('connection', function connection(ws) {
-    ws.on('message', function incoming(message) {
-        // Bu joyda umumiy chat uchun kod bo‘lsa, uni olib tashlang yoki faqat private chat uchun ishlating
+wss.on('connection', function(ws) {
+    ws.on('message', function(message) {
+        try {
+            const data = JSON.parse(message);
+            if (data.type === 'auth' && data.token && sessions[data.token]) {
+                ws.username = sessions[data.token];
+                sockets[ws.username] = ws;
+            }
+        } catch (e) {}
+    });
+    ws.on('close', function() {
+        if (ws.username) delete sockets[ws.username];
     });
 });
+
 server.listen(PORT, () => {
     console.log(`Server ${PORT}-portda ishlayapti`);
 });
