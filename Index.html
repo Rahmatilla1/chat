@@ -253,14 +253,27 @@
         #chat-box { max-width: 98vw; }
     }
     @media (max-width: 600px) {
-        #auth, #chat-box, #chat-controls, emoji-picker, #user-select, #user-actions {
-            max-width: 100vw;
-            width: 98vw;
-        }
-        #chat-box { height: 45vw; min-height: 180px; font-size: 1em; }
-        #send, #recordBtn { width: 70px; font-size: 1em; }
-        #user-actions { flex-direction: column; align-items: stretch; }
+    #auth, #chat-box, #chat-controls, emoji-picker, #user-select, #user-actions {
+        max-width: 100vw;
+        width: 98vw;
     }
+    #chat-box { height: 45vw; min-height: 180px; font-size: 1em; }
+    #chat-controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+    #send, #recordBtn {
+        width: 100%;
+        min-width: 0;
+        font-size: 1em;
+        height: 44px;
+    }
+    #user-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+}
     @media (max-width: 400px) {
         #chat-box { height: 120px; font-size: 0.95em; }
         #send, #recordBtn { width: 55px; font-size: 0.95em; }
