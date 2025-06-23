@@ -427,23 +427,25 @@ function loadChatHistory() {
 }
 // ...existing code...
 
-        deleteUserBtn.onclick = function() {
-            if (confirm("Akkauntingizni butunlay o‘chirishni istaysizmi?")) {
-                fetch('http://localhost:4001/user/delete', {
-                    method: 'POST',
-                    headers: { Authorization: token }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("Akkauntingiz o‘chirildi.");
-                        logoutBtn.onclick();
-                    } else {
-                        alert(data.error || "Xatolik yuz berdi.");
-                    }
-                });
+        // ...existing code...
+deleteUserBtn.onclick = function() {
+    if (confirm("Akkauntingizni butunlay o‘chirishni istaysizmi?")) {
+        fetch('http://localhost:4001/user/delete', {
+            method: 'POST',
+            headers: { Authorization: token }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert("Akkauntingiz o‘chirildi.");
+                logout(); // <-- logoutBtn.onclick() emas, to‘g‘ridan-to‘g‘ri logout() chaqiring
+            } else {
+                alert(data.error || "Xatolik yuz berdi.");
             }
-        };
+        });
+    }
+};
+// ...existing code...
 
     // Logout funksiyasi
     function logout() {
