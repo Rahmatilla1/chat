@@ -82,7 +82,7 @@
         <button id="send" disabled>Yuborish</button>
         <button id="recordBtn">🎤 Ovoz yozish</button>
     </div>
-    <div id="user-actions" style="margin-bottom:10px;">
+    <div id="user-actions" style="display: none; margin-bottom:10px;">
             <button id="logoutBtn">Chiqish (Logout)</button>
             <button id="deleteUserBtn" style="color:red;">Akkauntni o‘chirish</button>
     </div>
@@ -429,7 +429,7 @@ function loadChatHistory() {
 
         deleteUserBtn.onclick = function() {
             if (confirm("Akkauntingizni butunlay o‘chirishni istaysizmi?")) {
-                fetch('https://chat-18ex.onrender.com/user/delete', {
+                fetch('http://localhost:4001/user/delete', {
                     method: 'POST',
                     headers: { Authorization: token }
                 })
