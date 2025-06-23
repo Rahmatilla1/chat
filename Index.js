@@ -95,6 +95,32 @@ app.post('/chat/delete', (req, res) => {
 
 // ...existing code...
 
+// ...existing code...
+
+// Foydalanuvchini o‘chirish
+app.post('/user/delete', (req, res) => {
+    const token = req.headers.authorization;
+    const username = sessions[token];
+    if (!username) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Foydalanuvchini users ro‘yxatidan o‘chirish
+    users = users.filter(u => u.username !== username);
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+
+    // Chatlardan ham o‘chirish (ixtiyoriy)
+    Object.keys(chats).forEach(key => {
+        if (key.includes(username)) delete chats[key];
+    });
+    fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2));
+
+    // Sessiyani o‘chirish
+    delete sessions[token];
+
+    res.json({ success: true });
+});
+
+// ...existing code...
+
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 wss.on('connection', function connection(ws) {

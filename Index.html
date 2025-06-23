@@ -82,6 +82,12 @@
         <button id="send" disabled>Yuborish</button>
         <button id="recordBtn">🎤 Ovoz yozish</button>
     </div>
+    <!-- ...existing code... -->
+    <div id="user-actions" style="display:none; margin-bottom:10px;">
+            <button id="logoutBtn">Chiqish (Logout)</button>
+            <button id="deleteUserBtn" style="color:red;">Akkauntni o‘chirish</button>
+    </div>
+<!-- ...existing code... -->
     <emoji-picker id="emojiPicker"></emoji-picker>
     <!-- ...existing code... -->
     <script>
@@ -99,6 +105,9 @@
     const userSelectDiv = document.getElementById('user-select');
     const userList = document.getElementById('userList');
     const startChatBtn = document.getElementById('startChat');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const deleteUserBtn = document.getElementById('deleteUserBtn');
+    const userActionsDiv = document.getElementById('user-actions');
 
     let mediaRecorder;
     let audioChunks = [];
