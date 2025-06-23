@@ -23,61 +23,64 @@ const sessions = {};
 let users = [];
 let chats = {};
 const sockets = {}; // WebSocket ulanishlari uchun
-let subscriptions = []; // Web Push API uchun subscriptionlar
 
 // Fayllardan ma'lumotlarni yuklash
 if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
 if (fs.existsSync(CHATS_FILE)) chats = JSON.parse(fs.readFileSync(CHATS_FILE, 'utf-8'));
 
+let subscriptions = [];
+
 app.post('/subscribe', (req, res) => {
   const subscription = req.body;
-  subscriptions.push(subscription);
+  // Subscriptionni ma'lumotlar bazasiga saqlash
+  db.saveSubscription(subscription);
   res.status(201).json({});
 });
 
 app.post('/send-notification', (req, res) => {
   const notification = req.body;
-  const payload = JSON.stringify(notification);
-  subscriptions.forEach(sub => {
-    webpush.sendNotification(sub, payload).catch(() => {});
+  const subscriptions = db.getSubscriptions();
+  subscriptions.forEach(subscription => {
+    webpush.sendNotification(subscription, notification)
+      .catch(err => console.error(err));
   });
   res.status(201).json({});
 });
 
 function sendPushNotification(title, body) {
-  const payload = JSON.stringify({ title, body });
-  subscriptions.forEach(sub => {
-    webpush.sendNotification(sub, payload).catch(() => {});
-  });
+    const payload = JSON.stringify({ title, body });
+    subscriptions.forEach(sub => {
+        webpush.sendNotification(sub, payload).catch(() => {});
+    });
 }
 
 // Ro'yxatdan o'tish
 app.post('/register', (req, res) => {
-  const { username, password } = req.body;
-  if (users.find(u => u.username === username)) {
-    return res.status(400).json({ error: 'Username already exists' });
-  }
-  users.push({ username, password });
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-  res.json({ success: true });
+    const { username, password } = req.body;
+    if (users.find(u => u.username === username)) {
+        return res.status(400).json({ error: 'Username already exists' });
+    }
+    users.push({ username, password });
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    res.json({ success: true });
 });
 
 // Login
 function generateToken() {
-  return Math.random().toString(36).substr(2, 16);
+    return Math.random().toString(36).substr(2, 16);
 }
 app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-  const token = generateToken();
-  sessions[token] = username;
-  res.json({ token, username });
+    const { username, password } = req.body;
+    const user = users.find(u => u.username === username && u.password === password);
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    const token = generateToken();
+    sessions[token] = username;
+    res.json({ token, username });
 });
 
 // Foydalanuvchilar ro'yxati
 app.get('/users', (req, res) => {
-  res.json(users.map(u => ({ username: u.username })));
+    res.json(users.map(u => ({ username: u.username })));
 });
 
 // Chat tarixini olish
