@@ -612,17 +612,24 @@ if ('serviceWorker' in navigator && 'PushManager' in window) {
     navigator.serviceWorker.register('sw.js').then(swReg => {
         return swReg.pushManager.getSubscription().then(sub => {
             if (sub === null) {
-                // Subscribe
+                // Yangi subscribe bo‘lish
                 return swReg.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: 'BE2xPCwCk9wNYrH8Z0SXxzp4ZbkTTi1YqTpdhYyp67hjgiql0Fpr0zieO4kujvtrAi4z0ZARTRgh0mx7_g21Qww'
                 }).then(newSub => {
-                    // Subscriptionni backendga yuborish
+                    // Username bilan serverga yuborish
                     fetch('https://chat-x1i3.onrender.com/subscribe', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(newSub)
+                        body: JSON.stringify({ username: myName, subscription: newSub })
                     });
+                });
+            } else {
+                // Allaqachon subscribe bo‘lgan, lekin username bilan yuborish
+                fetch('https://chat-x1i3.onrender.com/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: myName, subscription: sub })
                 });
             }
         });
