@@ -129,53 +129,59 @@
         display: block;
     }
     #chat-controls {
-        display: flex;
-        width: 100%;
-        max-width: 420px;
-        gap: 2%;
-        margin-bottom: 12px;
-    }
+    display: flex;
+    width: 100%;
+    max-width: 420px;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: stretch;
+}
     #message, #send {
         box-sizing: border-box;
     }
     #message {
-        flex: 1 1 0;
-        padding: 10px;
-        border-radius: 6px;
-        border: 1px solid #bdbdbd;
-        font-size: 1em;
-        background: #f7fafd;
-        transition: border 0.2s;
-    }
+    flex: 1 1 0;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #bdbdbd;
+    font-size: 1em;
+    background: #f7fafd;
+    transition: border 0.2s;
+    height: 44px;
+}
     #message:focus {
         border: 1.5px solid #1976d2;
         outline: none;
         background: #fff;
     }
-    #send, #recordBtn {
-        width: 90px;
-        padding: 10px 0;
-        color: #fff;
-        border-radius: 6px;
-        border: none;
-        background: linear-gradient(90deg, #42e695 0%, #3bb2b8 100%);
-        font-weight: bold;
-        font-size: 1em;
-        cursor: pointer;
-        transition: background 0.2s;
+   #send, #recordBtn {
+    width: 90px;
+    min-width: 70px;
+    height: 44px;
+    padding: 0;
+    color: #fff;
+    border-radius: 6px;
+    border: none;
+    background: linear-gradient(90deg, #42e695 0%, #3bb2b8 100%);
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     }
     #send:disabled, #recordBtn:disabled {
-        background: #bdbdbd;
-        cursor: not-allowed;
+    background: #bdbdbd;
+    cursor: not-allowed;
     }
     #send:hover, #recordBtn:hover {
         background: linear-gradient(90deg, #3bb2b8 0%, #42e695 100%);
     }
     #recordBtn {
-        width: 48px;
-        padding: 0;
         font-size: 1.3em;
-        margin-left: 4px;
+        margin-left: 0;
+        background: linear-gradient(90deg, #3bb2b8 0%, #42e695 100%);
     }
     emoji-picker {
         width: 100%;
@@ -212,35 +218,35 @@
         background: linear-gradient(90deg, #3bb2b8 0%, #42e695 100%);
     }
     #user-actions {
-        width: 100%;
-        max-width: 420px;
-        display: flex;
-        gap: 8px;
-        margin-bottom: 12px;
-        justify-content: flex-end;
-    }
-    #user-actions button {
-        padding: 8px 12px;
-        border-radius: 6px;
-        border: none;
-        font-weight: bold;
-        font-size: 1em;
-        cursor: pointer;
-        background: #f5f5f5;
-        color: #1976d2;
-        transition: background 0.2s;
-    }
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    justify-content: flex-end;
+}
+#user-actions button {
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: none;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    background: #f5f5f5;
+    color: #1976d2;
+    transition: background 0.2s;
+}
     #user-actions button:hover {
-        background: #e3e3e3;
-    }
-    #user-actions button[style*="color:red"] {
-        color: #e53935 !important;
-        border: 1px solid #e53935;
-        background: #fff;
-    }
-    #user-actions button[style*="color:red"]:hover {
-        background: #ffeaea;
-    }
+    background: #e3e3e3;
+}
+#user-actions button[style*="color:red"] {
+    color: #fff !important;
+    background: #e53935 !important;
+    border: none;
+}
+#user-actions button[style*="color:red"]:hover {
+    background: #b71c1c !important;
+}
 
     /* RESPONSIVE */
     @media (max-width: 900px) {
