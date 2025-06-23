@@ -324,6 +324,98 @@
     }
 };
 
+// ...existing code...
+function appendMessage(sender, name, text, time, index) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg ' + sender;
+
+    if (sender === 'other') {
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'name';
+        nameSpan.textContent = name;
+        msgDiv.appendChild(nameSpan);
+    }
+
+    // Agar audio bo‘lsa, player chiqarish
+    if (typeof text === 'string' && text.startsWith('data:audio')) {
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.src = text;
+        msgDiv.appendChild(audio);
+    } else {
+        msgDiv.appendChild(document.createTextNode(text));
+    }
+
+    // Sana va vaqt
+    if (time) {
+        const date = new Date(time);
+        const timeSpan = document.createElement('span');
+        timeSpan.style.display = 'block';
+        timeSpan.style.fontSize = '0.8em';
+        timeSpan.style.color = '#888';
+        timeSpan.textContent = date.toLocaleString();
+        msgDiv.appendChild(timeSpan);
+    }
+
+    // O‘chirish tugmasi (faqat o‘z xabari uchun)
+    if (sender === 'me') {
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '🗑';
+        delBtn.style.marginLeft = '8px';
+        delBtn.style.fontSize = '0.9em';
+        delBtn.style.cursor = 'pointer';
+        delBtn.onclick = function() {
+            if (confirm("Xabarni o‘chirishni istaysizmi?")) {
+                fetch('https://chat-x1i3.onrender.com/chat/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: token
+                    },
+                    body: JSON.stringify({ to: currentChat, index })
+                }).then(() => {
+                    loadChatHistory();
+                });
+            }
+        };
+        msgDiv.appendChild(delBtn);
+    }
+
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+// ...existing code...
+
+// ...existing code...
+function loadChatHistory() {
+    if (!token || !currentChat) return;
+    fetch(`https://chat-x1i3.onrender.com/chat/${currentChat}`, { headers: { Authorization: token } })
+        .then(r => {
+            if (r.status === 401) {
+                logout();
+                return [];
+            }
+            return r.json();
+        })
+        .then(msgs => {
+            chatBox.innerHTML = '';
+            if (Array.isArray(msgs)) {
+                msgs.forEach((msg, i) => {
+                    appendMessage(
+                        msg.from === myName ? 'me' : 'other',
+                        msg.from,
+                        msg.text,
+                        msg.time,
+                        i // index
+                    );
+                });
+            } else {
+                chatBox.innerHTML = '<i>Xabarlar yo‘q</i>';
+            }
+        });
+}
+// ...existing code...
+
     // Logout funksiyasi
     function logout() {
         localStorage.removeItem('token');

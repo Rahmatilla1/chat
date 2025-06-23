@@ -72,6 +72,29 @@ app.post('/chat/send', (req, res) => {
     res.json({ success: true });
 });
 
+// ...existing code...
+
+// Xabar o‘chirish (index orqali)
+app.post('/chat/delete', (req, res) => {
+    const token = req.headers.authorization;
+    const username = sessions[token];
+    if (!username) return res.status(401).json({ error: 'Unauthorized' });
+    const { to, index } = req.body;
+    const key = [username, to].sort().join('|');
+    if (!chats[key] || typeof index !== 'number' || index < 0 || index >= chats[key].length) {
+        return res.status(400).json({ error: 'Invalid index' });
+    }
+    // Faqat o‘zining xabarini o‘chira oladi
+    if (chats[key][index].from !== username) {
+        return res.status(403).json({ error: 'Faqat o‘z xabaringizni o‘chira olasiz' });
+    }
+    chats[key].splice(index, 1);
+    fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2));
+    res.json({ success: true });
+});
+
+// ...existing code...
+
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 wss.on('connection', function connection(ws) {
