@@ -12,8 +12,8 @@ app.use(cors());
 
 const USERS_FILE = 'users.json';
 const CHATS_FILE = 'chats.json';
+const sessions = {};
 let users = [];
-let sessions = {};
 let chats = {}; // { "user1|user2": [ {from, to, text, time}, ... ] }
 
 // Foydalanuvchilarni va chatlarni yuklash
@@ -120,6 +120,16 @@ app.post('/user/delete', (req, res) => {
 });
 
 // ...existing code...
+
+// LOGOUT route
+app.post('/logout', (req, res) => {
+    const token = req.headers.authorization;
+    if (token && sessions[token]) {
+        delete sessions[token]; // Tokenni o‘chirib tashlash
+        return res.json({ success: true, message: "Logout bo‘ldingiz" });
+    }
+    res.status(401).json({ success: false, error: "Avtorizatsiya xatosi" });
+});
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
