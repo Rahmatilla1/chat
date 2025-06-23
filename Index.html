@@ -335,8 +335,9 @@
         if (ws) ws.close();
         ws = new WebSocket('ws://chat-x1i3.onrender.com');
         ws.onopen = function() {
-            if (token) ws.send(JSON.stringify({ type: 'auth', token }));
-        };
+        token = localStorage.getItem('token');
+        if (token) ws.send(JSON.stringify({ type: 'auth', token }));
+    };
         ws.onmessage = function(event) {
             try {
                 const data = JSON.parse(event.data);
