@@ -5,7 +5,6 @@ const fs = require('fs');
 const cors = require('cors');
 const PORT = process.env.PORT || 4001;
 
-
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -15,6 +14,7 @@ const CHATS_FILE = 'chats.json';
 const sessions = {};
 let users = [];
 let chats = {};
+const sockets = {}; // WebSocket ulanishlari uchun
 
 // Fayllardan ma'lumotlarni yuklash
 if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
@@ -59,6 +59,7 @@ app.get('/chat/:withUser', (req, res) => {
     res.json(chats[key] || []);
 });
 
+// WebSocket orqali xabar berish
 function notifyUser(username) {
     if (sockets[username]) {
         sockets[username].send(JSON.stringify({ type: 'new_message' }));
@@ -71,13 +72,12 @@ app.post('/chat/send', (req, res) => {
     const username = sessions[token];
     if (!username) return res.status(401).json({ error: 'Unauthorized' });
     const { to, text } = req.body;
-    notifyUser(to);
-    notifyUser(from);
-    res.json({ success: true });
     const key = [username, to].sort().join('|');
     if (!chats[key]) chats[key] = [];
     chats[key].push({ from: username, to, text, time: Date.now() });
     fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2));
+    notifyUser(to);
+    notifyUser(username);
     res.json({ success: true });
 });
 
@@ -127,7 +127,7 @@ app.post('/logout', (req, res) => {
     res.status(401).json({ success: false, error: "Avtorizatsiya xatosi" });
 });
 
-// WebSocket (minimal, agar ishlatilmasa, olib tashlasa ham bo'ladi)
+// WebSocket server
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 wss.on('connection', function(ws) {

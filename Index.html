@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Odamlar Chat</title>
     <style>
+        /* ...style'laringiz o'zgarishsiz qoldi... */
         html, body { height: 100%; margin: 0; padding: 0; background: #f4f4f4; }
         body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; }
         #auth, #chat-controls, emoji-picker { width: 100%; max-width: 420px; box-sizing: border-box; }
@@ -104,7 +105,6 @@
             nameSpan.className = 'name';
             nameSpan.textContent = name;
             msgDiv.appendChild(nameSpan);
-            connectWebSocket();
         }
         if (typeof text === 'string' && text.startsWith('data:audio')) {
             const audio = document.createElement('audio');
@@ -155,7 +155,6 @@
                         opt.value = u.username;
                         opt.textContent = u.username;
                         userList.appendChild(opt);
-                        connectWebSocket();
                     }
                 });
                 userSelectDiv.style.display = userList.children.length > 0 ? '' : 'none';
@@ -169,7 +168,6 @@
             .then(r => {
                 if (r.status === 401) { logout(); return []; }
                 return r.json();
-                connectWebSocket();
             })
             .then(msgs => {
                 chatBox.innerHTML = '';
@@ -194,7 +192,6 @@
         }).then(() => {
             messageInput.value = '';
             loadChatHistory();
-            connectWebSocket();
         });
     }
 
@@ -202,7 +199,7 @@
         token = localStorage.getItem('token');
         myName = localStorage.getItem('myName');
         currentChat = localStorage.getItem('currentChat');
-        connectWebSocket()
+        connectWebSocket();
         if (token && myName) {
             showAuth(false);
             loadAllUsers(() => {
@@ -260,7 +257,6 @@
                 authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
                 authDiv.style.display = 'none';
                 loginBtn.onclick();
-                connectWebSocket();
             } else {
                 authError.textContent = data.error || 'Xatolik';
             }
@@ -274,7 +270,6 @@
             messageInput.disabled = false;
             sendBtn.disabled = false;
             loadChatHistory();
-            connectWebSocket();
         }
     };
 
@@ -334,7 +329,6 @@
                 if (data.success) {
                     alert("Akkauntingiz o‘chirildi.");
                     logout();
-                    connectWebSocket();
                 } else {
                     alert(data.error || "Xatolik yuz berdi.");
                 }
@@ -357,6 +351,6 @@
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     if (window.Notification && Notification.permission !== "granted") Notification.requestPermission();
     </script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/Index.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 </body>
 </html>
