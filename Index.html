@@ -155,7 +155,7 @@
     loginBtn.onclick = function() {
         const username = document.getElementById('auth-username').value.trim();
         const password = document.getElementById('auth-password').value.trim();
-        fetch('https://chat-x1i3.onrender.com/login', {
+        fetch('http://localhost:4001/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -179,7 +179,7 @@
     registerBtn.onclick = function() {
         const username = document.getElementById('auth-username').value.trim();
         const password = document.getElementById('auth-password').value.trim();
-        fetch('https://chat-x1i3.onrender.com/register', {
+        fetch('http://localhost:4001/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -198,7 +198,7 @@
 
     // Foydalanuvchilar ro'yxatini yuklash va selectga joylash
     function loadAllUsers(cb) {
-        fetch('https://chat-x1i3.onrender.com/users')
+        fetch('http://localhost:4001/users')
             .then(r => r.json())
             .then(users => {
                 userList.innerHTML = '';
@@ -234,7 +234,7 @@
     // Chat tarixini yuklash
     function loadChatHistory() {
     if (!token || !currentChat) return;
-    fetch(`https://chat-x1i3.onrender.com/chat/${currentChat}`, { headers: { Authorization: token } })
+    fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
         .then(r => {
             if (r.status === 401) {
                 logout();
@@ -258,7 +258,7 @@
     function sendPrivateMessage() {
         const text = messageInput.value.trim();
         if (!text || !currentChat || !token) return;
-        fetch('https://chat-x1i3.onrender.com/chat/send', {
+        fetch('http://localhost:4001/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: token },
             body: JSON.stringify({ to: currentChat, text })
@@ -307,7 +307,7 @@
             const reader = new FileReader();
             reader.onloadend = function() {
                 const base64audio = reader.result;
-                fetch('https://chat-x1i3.onrender.com/chat/send', {
+                fetch('http://localhost:4001/chat/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: token },
                     body: JSON.stringify({ to: currentChat, text: base64audio, type: 'audio' })
@@ -366,7 +366,7 @@ function appendMessage(sender, name, text, time, index) {
         delBtn.style.cursor = 'pointer';
         delBtn.onclick = function() {
             if (confirm("Xabarni o‘chirishni istaysizmi?")) {
-                fetch('https://chat-x1i3.onrender.com/chat/delete', {
+                fetch('http://localhost:4001/chat/delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -389,7 +389,7 @@ function appendMessage(sender, name, text, time, index) {
 // ...existing code...
 function loadChatHistory() {
     if (!token || !currentChat) return;
-    fetch(`https://chat-x1i3.onrender.com/chat/${currentChat}`, { headers: { Authorization: token } })
+    fetch(`http://localhost:4001/chat/${currentChat}`, { headers: { Authorization: token } })
         .then(r => {
             if (r.status === 401) {
                 logout();
