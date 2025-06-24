@@ -52,30 +52,6 @@
     let mediaRecorder, audioChunks = [];
     let ws;
 
-        function initApp() {
-        token = localStorage.getItem('token');
-        myName = localStorage.getItem('myName');
-        currentChat = localStorage.getItem('currentChat');
-        connectWebSocket();
-
-        if (token && myName) {
-            showAuth(false);
-            loadAllUsers(() => {
-                if (currentChat) {
-                    userList.value = currentChat;
-                    messageInput.disabled = false;
-                    sendBtn.disabled = false;
-                    loadChatHistory();
-                }
-            });
-        } else {
-            showAuth(true);
-            userSelectDiv.style.display = 'none';
-            chatBox.innerHTML = '';
-            messageInput.disabled = true;
-            sendBtn.disabled = true;
-        }
-    }
     function connectWebSocket() {
         if (ws) ws.close();
         ws = new WebSocket('ws://chat-x1i3.onrender.com');
@@ -199,7 +175,7 @@
         });
     }
 
-    window.addEventListener('DOMContentLoaded', initApp = function() {
+    window.addEventListener('DOMContentLoaded', function() {
         token = localStorage.getItem('token');
         myName = localStorage.getItem('myName');
         currentChat = localStorage.getItem('currentChat');
@@ -231,18 +207,19 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         })
-            .then(r => r.json())
-            .then(data => {
+        .then(r => r.json())
+        .then(data => {
             if (data.token) {
-            token = data.token;
-            myName = data.username;
-            localStorage.setItem('token', token);
-            localStorage.setItem('myName', myName);
-            initApp();
-        } else {
-            authError.textContent = data.error || 'Xatolik';
-        }
-
+                token = data.token;
+                myName = data.username;
+                localStorage.setItem('token', token);
+                localStorage.setItem('myName', myName);
+                showAuth(false);
+                loadAllUsers();
+                connectWebSocket();
+            } else {
+                authError.textContent = data.error || 'Xatolik';
+            }
         });
     };
 
@@ -257,24 +234,24 @@
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-            authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
-            loginBtn.onclick(initApp); // login orqali initApp chaqiriladi
-        } else {
-            authError.textContent = data.error || 'Xatolik';
-        }
-
+                authError.textContent = "Ro'yxatdan o'tdingiz! Endi kirishingiz mumkin.";
+                authDiv.style.display = 'none';
+                loginBtn.onclick();
+            } else {
+                authError.textContent = data.error || 'Xatolik';
+            }
         });
     };
 
     startChatBtn.onclick = function() {
-    currentChat = userList.value;
-    if (currentChat) {
-        localStorage.setItem('currentChat', currentChat);
-        messageInput.disabled = false;
-        sendBtn.disabled = false;
-        loadChatHistory();
-    }
-};
+        currentChat = userList.value;
+        if (currentChat) {
+            localStorage.setItem('currentChat', currentChat);
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            loadChatHistory();
+        }
+    };
 
     sendBtn.onclick = sendPrivateMessage;
     messageInput.addEventListener('keydown', function(e) {
